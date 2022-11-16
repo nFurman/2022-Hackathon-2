@@ -12,6 +12,14 @@
 }
 */
 
+body {
+  margin: 0;
+}
+
 #board_container {
   background-color: aqua;
+}
+
+.piece {
+  position: absolute;
 }
