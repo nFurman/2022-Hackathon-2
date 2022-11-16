@@ -1,6 +1,5 @@
 class Move {
-  Move(side, piece, startRow, startCol, endRow, endCol) {
-    console.log("makin a thins");
+  constructor(side, piece, startRow, startCol, endRow, endCol) {
     this.side = side;
     this.piece = piece;
     this.startRow = startRow;

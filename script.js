@@ -92,7 +92,7 @@ function setUpBoard() {
 
 setUpBoard();
 
-console.log(board);
+//console.log(board);
 
 function checkLegalMove(move) {
   if (checkCastleAttempt(move)) {
@@ -101,20 +101,23 @@ function checkLegalMove(move) {
   }
   let endSquare = board[move.endRow][move.endCol];
   if (endSquare === "empty") {
-    if (canReach()) {
+    if (canReach(move)) {
       return true;
     } else {
       return false;
     }
   }
-  if (move.side === endSquare[0]) {
+
+  if (move.side != endSquare[0]) {
     //0th index corresponds to color of piece on square
-    if (canReach()) {
+    if (canReach(move)) {
       return true;
     } else {
       return false;
     }
   }
+
+  return false;
 }
 
 function canReach(move) {
@@ -161,13 +164,13 @@ function canReach(move) {
       if (startRow != endRow && startCol != endCol) {
         return false;
       }
-      if (startRow === endRow) {
+      if (startCol === endCol) {
         for (let r = startRow + 1; r < endRow; r++) {
           if (board[r][startCol] != "empty") return false;
         }
         return true;
       }
-      if (startCol === endCol) {
+      if (startRow === endRow) {
         for (let c = startCol + 1; c < endCol; c++) {
           if (board[startRow][c] != "empty") return false;
         }
@@ -214,13 +217,14 @@ function canReach(move) {
     case "q":
       if (startRow === endRow || startCol === endCol) {
         //rook movement
-        if (startRow === endRow) {
+
+        if (startCol === endCol) {
           for (let r = startRow + 1; r < endRow; r++) {
             if (board[r][startCol] != "empty") return false;
           }
           return true;
         }
-        if (startCol === endCol) {
+        if (startRow === endRow) {
           for (let c = startCol + 1; c < endCol; c++) {
             if (board[startRow][c] != "empty") return false;
           }
@@ -283,6 +287,6 @@ function makeMove(move) {
 
 function animateMove(move) {}
 
-let testMove = new Move("white", "k", 0, 5, 1, 6);
-console.log(testMove.side);
-console.log(canReach(testMove));
+let testMove = new Move("white", "q", 0, 5, 5, 5);
+
+console.log(checkLegalMove(testMove));
