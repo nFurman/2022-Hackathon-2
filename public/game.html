@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hackathon game</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+  </head>
+  <body>
+    <div id="board_container"></div>
+    <input type="text" class="message" placeholder="message" />
+    <button onclick="sendMessage()">Send Message</button>
+    <h2></h2>
+    <script>
+      const socket = io("http://localhost:3000/");
+      socket.on("connection", () => {
+        console.log(socket.id);
+      });
+
+      socket.on("message", (data) => {
+        let h2 = (document.querySelector("h2").innerHTML = data);
+      });
+
+      const sendMessage = () => {
+        let userInput = document.querySelector(".message").value;
+        socket.emit("message", userInput);
+        console.log("hello");
+      };
+    </script>
+
+    <script type="text/javascript" src="resources.js"></script>
+    <script type="text/javascript" src="classes.js"></script>
+    <script type="text/javascript" src="script.js"></script>
+  </body>
+</html>
