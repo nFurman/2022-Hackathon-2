@@ -11,19 +11,31 @@ BOARD_ELEMENT.style.width = BOARD_SIZE + "px";
 let board = [];
 let turn = 0;
 
-let playerPerspectiveIsWhite = true;
+let playerPerspectiveIsWhite = false;
 
-/*
-function () {
+function makeGrid() {
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       let newSquare = document.createElement("div");
       newSquare.classList.add("tile");
+      if (playerPerspectiveIsWhite) {
+        newSquare.dataset.row = 7 - row;
+        newSquare.dataset.col = 7 - col;
+      } else {
+        newSquare.dataset.row = row;
+        newSquare.dataset.col = col;
+      }
+      if ((row + col) % 2 == 0) {
+        newSquare.classList.add("light");
+      } else {
+        newSquare.classList.add("dark");
+      }
       BOARD_ELEMENT.appendChild(newSquare);
     }
   }
 }
-*/
+
+makeGrid();
 
 function makeEmptyBoard() {
   let resultingBoard = [];
@@ -44,7 +56,13 @@ function drawPiece(color, piece, row, col) {
   let pieceImage = document.createElement("img");
   pieceImage.src = color === "white" ? whitePieces[piece] : blackPieces[piece];
   pieceImage.className = "piece";
-  pieceImage.id = row.toString() + col.toString();
+  if (playerPerspectiveIsWhite) {
+    pieceImage.dataset.row = row;
+    pieceImage.dataset.col = col;
+  } else {
+    pieceImage.dataset.row = 7 - row;
+    pieceImage.dataset.col = 7 - col;
+  }
   pieceImage.draggable = true;
   pieceImage.width = TILE_SIZE;
   pieceImage.height = TILE_SIZE;
@@ -53,7 +71,7 @@ function drawPiece(color, piece, row, col) {
     pieceImage.style.top = BOARD_SIZE - TILE_SIZE * (row + 1) + "px";
   } else {
     pieceImage.style.left = BOARD_SIZE - TILE_SIZE * (col + 1) + "px";
-    pieceImage.style.top = TILE_SIZE * row * row + "px";
+    pieceImage.style.top = TILE_SIZE * row + "px";
   }
 
   BOARD_ELEMENT.appendChild(pieceImage);
@@ -313,17 +331,13 @@ function checkCastleAttempt(move) {
 
 function makeMove(move) {
   if (checkLegalMove(move)) {
-    //updates the board array
-    board[move.endRow][move.endCol] = JSON.parse(
-      JSON.stringify(board[move.startRow][move.startCol])
-    );
-    board[move.startRow][move.startCol] = "empty";
-
-    //updates the html pieces
-    let movingPiece = document.getElementById(
-      move.startRow.toString() + move.startCol.toString()
-    );
-
+    //updates the html piece elements
+    if (board[move.endRow][move.endCol] != "empty") {
+      let capturedPiece = getPieceByRowCol(move.endRow, move.endCol);
+      capturedPiece.remove();
+    }
+    let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
+    console.log(movingPiece);
     if (playerPerspectiveIsWhite) {
       movingPiece.style.left = TILE_SIZE * move.endCol + "px";
       movingPiece.style.top = BOARD_SIZE - TILE_SIZE * (move.endRow + 1) + "px";
@@ -332,7 +346,19 @@ function makeMove(move) {
         BOARD_SIZE - TILE_SIZE * (move.endCol + 1) + "px";
       movingPiece.style.top = TILE_SIZE * move.endRow + +"px";
     }
-    movingPiece.id = move.endRow.toString() + move.endCol.toString();
+    if (playerPerspectiveIsWhite) {
+      movingPiece.dataset.row = move.endRow;
+      movingPiece.dataset.col = move.endCol;
+    } else {
+      movingPiece.dataset.row = 7 - move.endRow;
+      movingPiece.dataset.col = 7 - move.endCol;
+    }
+
+    //updates the board array
+    board[move.endRow][move.endCol] = JSON.parse(
+      JSON.stringify(board[move.startRow][move.startCol])
+    );
+    board[move.startRow][move.startCol] = "empty";
 
     //prevents king from castling
     if (board[move.endRow][move.endCol][1] === ["k"]) {
@@ -341,29 +367,72 @@ function makeMove(move) {
     }
 
     turn++;
-    animateMove(move);
   } else {
     //do stuff
   }
 }
 
-function animateMove(move) {}
+function getPieceByRowCol(row, col) {
+  if (playerPerspectiveIsWhite) {
+    return document.querySelector(
+      '.piece[data-row="' + row + '"][data-col="' + col + '"]'
+    );
+  } else {
+    return document.querySelector(
+      '.piece[data-row="' + 7 - row + '"][data-col="' + 7 - col + '"]'
+    );
+  }
+}
+
+function animateMove(move) {
+  let movingPiece = getPieceByRowCol(move.endRow, move.endCol);
+}
 
 let testMove = new Move("white", "n", 0, 6, 2, 5);
 
+let testMove2 = new Move("white", "n", 2, 5, 4, 6);
+let testMove3 = new Move("white", "n", 4, 6, 6, 5);
+
+let testMove4 = new Move("white", "n", 6, 5, 5, 3);
+
 console.log(board[2][5]);
 
-makeMove(testMove);
+//makeMove(testMove);
+// makeMove(testMove2);
+// makeMove(testMove3);
+
+// makeMove(testMove4);
 
 console.log(board[2][5]);
 
-document.querySelectorAll(".piece").forEach((piece) => {
-  piece.addEventListener("dragend", () => {
-    dragging(piece);
+let pieceCurrentlyDragged = []; //[row, col]
+
+document.querySelectorAll(".tile").forEach((tile) => {
+  tile.addEventListener("drop", (e) => {
+    drop(e, tile);
+  });
+  tile.addEventListener("dragover", (e) => {
+    dragover(e);
   });
 });
 
-function dragging(piece) {
+document.querySelectorAll(".piece").forEach((piece) => {
+  piece.addEventListener("dragstart", (e) => {
+    dragstart(piece);
+  });
+});
+
+function dragstart(piece) {
+  pieceCurrentlyDragged = [+piece.dataset.row, +piece.dataset.col];
+}
+
+function drop(e, tile) {
   //is called whenever a piece is dropped down
+  e.preventDefault();
+  console.log(tile.dataset.row);
+}
+
+function dragover(e) {
+  e.preventDefault();
   console.log("cum");
 }

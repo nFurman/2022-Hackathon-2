@@ -1,23 +1,23 @@
-/*
 #board_container {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  row-gap: 10px;
 }
 
 .tile {
   width: 50px;
   height: 50px;
-  background-color: aqua;
 }
-*/
+
+.dark {
+  background-color: saddlebrown;
+}
+
+.light {
+  background-color: burlywood;
+}
 
 body {
   margin: 0;
-}
-
-#board_container {
-  background-color: aqua;
 }
 
 .piece {
