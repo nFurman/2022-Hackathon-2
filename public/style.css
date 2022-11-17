@@ -29,12 +29,26 @@ body {
   height: 80 px;
 }
 
+#title {
+  font-family: "MedievalSharp", cursive;
+  font-size: 55px;
+  color: rgb(249, 249, 249);
+}
+
 body {
-  background-color: rgb(126, 124, 122);
+  background-image: url("https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/e4Gpia8/side-shot-of-a-chess-board-over-a-black-background-and-the-chess-pieces-lin_v0iu7ixol_thumbnail-1080_01.png");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
 }
 
 .btn {
+  width: 70px;
+  height: 30px;
   border-radius: 35px;
+  margin-bottom: 40px;
+  background-color: black;
+  color: white;
 }
 .container {
   height: 90vh;
@@ -50,14 +64,11 @@ body {
 }
 
 .cell-3 {
-  background: rgb(169, 159, 146);
+  background: rgb(60, 60, 60);
   grid-area: main;
   border-radius: 25px;
-}
-
-.cell {
-  color: white;
   font-size: 2.5rem;
   text-align: center;
   padding: 4rem;
+  border-style: solid black;
 }
