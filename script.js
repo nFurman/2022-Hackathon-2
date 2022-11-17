@@ -1,13 +1,17 @@
+//import $ from "jquery";
+
 const BOARD_ELEMENT = document.getElementById("board_container");
 
 const TILE_SIZE = 50;
-const TILE_GAP = 0;
 
-const BOARD_SIZE = TILE_SIZE * 8 + TILE_GAP * 7;
+const BOARD_SIZE = TILE_SIZE * 8;
 BOARD_ELEMENT.style.height = BOARD_SIZE + "px";
 BOARD_ELEMENT.style.width = BOARD_SIZE + "px";
 
 let board = [];
+let turn = 0;
+
+let playerPerspectiveIsWhite = true;
 
 /*
 function () {
@@ -40,11 +44,18 @@ function drawPiece(color, piece, row, col) {
   let pieceImage = document.createElement("img");
   pieceImage.src = color === "white" ? whitePieces[piece] : blackPieces[piece];
   pieceImage.className = "piece";
+  pieceImage.id = row.toString() + col.toString();
+  pieceImage.draggable = true;
   pieceImage.width = TILE_SIZE;
   pieceImage.height = TILE_SIZE;
-  pieceImage.style.left = TILE_SIZE * col + TILE_GAP * col + "px";
-  pieceImage.style.top =
-    BOARD_SIZE - (TILE_SIZE * (row + 1) + TILE_GAP * row) + "px";
+  if (playerPerspectiveIsWhite) {
+    pieceImage.style.left = TILE_SIZE * col + "px";
+    pieceImage.style.top = BOARD_SIZE - TILE_SIZE * (row + 1) + "px";
+  } else {
+    pieceImage.style.left = BOARD_SIZE - TILE_SIZE * (col + 1) + "px";
+    pieceImage.style.top = TILE_SIZE * row * row + "px";
+  }
+
   BOARD_ELEMENT.appendChild(pieceImage);
 }
 
@@ -120,6 +131,7 @@ function checkLegalMove(move) {
   return false;
 }
 
+//checks if the move is valid (doesnt go through other pieces)
 function canReach(move) {
   let { side, piece, startRow, startCol, endRow, endCol } = move;
   let endSquare = board[endRow][endCol];
@@ -128,15 +140,23 @@ function canReach(move) {
       switch (side) {
         case "white":
           if (
-            endRow === startRow &&
-            endCol - startCol === 1 &&
+            endCol === startCol &&
+            endRow - startRow === 2 &&
+            board[endRow][endCol] === "empty" &&
+            board[endRow - 1][endCol] === "empty"
+          ) {
+            return true;
+          }
+          if (
+            endCol === startCol &&
+            endRow - startRow === 1 &&
             endSquare === "empty"
           ) {
             return true;
           }
           if (
-            Math.abs(endRow - startRow) === 1 &&
-            endCol - startCol === 1 &&
+            Math.abs(endCol - startCol) === 1 &&
+            endRow - startRow === 1 &&
             endSquare != "empty"
           ) {
             return true;
@@ -144,15 +164,23 @@ function canReach(move) {
           break;
         case "black":
           if (
-            endRow === startRow &&
-            endCol - startCol === -1 &&
+            endCol === startCol &&
+            endRow - startRow === -2 &&
+            board[endRow][endCol] === "empty" &&
+            board[endRow + 1][endCol] === "empty"
+          ) {
+            return true;
+          }
+          if (
+            endCol === startCol &&
+            endRow - startRow === -1 &&
             endSquare === "empty"
           ) {
             return true;
           }
           if (
-            Math.abs(endRow - startRow) === 1 &&
-            endCol - startCol === -1 &&
+            Math.abs(endCol - startCol) === 1 &&
+            endRow - startRow === -1 &&
             endSquare != "empty"
           ) {
             return true;
@@ -273,20 +301,69 @@ function canReach(move) {
 }
 
 function checkCastleAttempt(move) {
-  //TODO
-  return false;
+  if (
+    board[move.startRow][move.startCol][0] === "k" &&
+    board[move.startRow][move.startCol][2] === "true"
+  ) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 function makeMove(move) {
   if (checkLegalMove(move)) {
+    //updates the board array
+    board[move.endRow][move.endCol] = JSON.parse(
+      JSON.stringify(board[move.startRow][move.startCol])
+    );
+    board[move.startRow][move.startCol] = "empty";
+
+    //updates the html pieces
+    let movingPiece = document.getElementById(
+      move.startRow.toString() + move.startCol.toString()
+    );
+
+    if (playerPerspectiveIsWhite) {
+      movingPiece.style.left = TILE_SIZE * move.endCol + "px";
+      movingPiece.style.top = BOARD_SIZE - TILE_SIZE * (move.endRow + 1) + "px";
+    } else {
+      movingPiece.style.left =
+        BOARD_SIZE - TILE_SIZE * (move.endCol + 1) + "px";
+      movingPiece.style.top = TILE_SIZE * move.endRow + +"px";
+    }
+    movingPiece.id = move.endRow.toString() + move.endCol.toString();
+
+    //prevents king from castling
+    if (board[move.endRow][move.endCol][1] === ["k"]) {
+      board[move.endRow][move.endCol][2] = false;
+      //the 2nd index of the tile correlates to the kings ability to castle
+    }
+
+    turn++;
+    animateMove(move);
   } else {
     //do stuff
-    animateMove(move);
   }
 }
 
 function animateMove(move) {}
 
-let testMove = new Move("white", "q", 0, 5, 5, 5);
+let testMove = new Move("white", "n", 0, 6, 2, 5);
 
-console.log(checkLegalMove(testMove));
+console.log(board[2][5]);
+
+makeMove(testMove);
+
+console.log(board[2][5]);
+
+document.querySelectorAll(".piece").forEach((piece) => {
+  piece.addEventListener("dragend", () => {
+    dragging(piece);
+  });
+});
+
+function dragging(piece) {
+  //is called whenever a piece is dropped down
+  console.log("cum");
+}
