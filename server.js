@@ -10,6 +10,10 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/public/index.html");
 });
 
+app.get("/createAccount", (req, res) => {
+  res.sendFile(__dirname + "/public/createAccount.html");
+});
+
 app.get("/homepage", (req, res) => {
   res.sendFile(__dirname + "/public/game.html");
   console.log("on the homepage");
@@ -22,6 +26,11 @@ io.on("connection", (Socket) => {
   Socket.on("message", (data) => {
     Socket.broadcast.emit("message", data);
     console.log(data);
+  });
+
+  Socket.on("broadcastMove", (move) => {
+    Socket.broadcast.emit("receiveMove", move);
+    console.log(move);
   });
 });
 

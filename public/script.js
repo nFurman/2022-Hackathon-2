@@ -661,6 +661,7 @@ function makeMove(move) {
     updateBoardArray(realBoard, move);
 
     turn++;
+    emitMove(move);
   } else {
     //do stuff
   }
