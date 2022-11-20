@@ -43,16 +43,27 @@ app.get("/homepage", (req, res) => {
   console.log("on the homepage");
 });
 
+
 io.on("connection", (Socket) => {
-  //console.log(Socket);
+
+
+io.on("connection", (Socket) => {
+  console.log("User connected:" + Socket.id);
+
+  Socket.broadcast.emit("userConnected");
+
 
   Socket.on("message", (data) => {
     Socket.broadcast.emit("message", data);
     console.log(data);
   });
 
-  Socket.on("broadcastMove", (move) => {
-    Socket.broadcast.emit("receiveMove", move);
+  Socket.on("broadcastStartGame", () => {
+    Socket.broadcast.emit("startGame");
+  });
+
+  Socket.on("broadcastMove", (move, castling) => {
+    Socket.broadcast.emit("receiveMove", move, castling);
     console.log(move);
   });
 });

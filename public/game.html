@@ -16,8 +16,9 @@
     <script>
       console.log("receieved message");
       const socket = io("http://localhost:3000/");
-      socket.on("connection", () => {
-        console.log(socket.id);
+
+      socket.on("userConnected", () => {
+        userConnected();
       });
 
       socket.on("message", (data) => {
@@ -25,14 +26,25 @@
         console.log("messagefouhsdfihus");
       });
 
+      socket.on("startGame", () => {
+        startGame();
+      });
+
       const sendMessage = () => {
         let userInput = document.querySelector(".message").value;
         socket.emit("message", userInput);
       };
 
-      socket.on("receiveMove", (data) => {});
-      function broadcastMove(move) {
-        socket.emit("broadcastMove", move);
+      socket.on("receiveMove", (move, castling) => {
+        receiveMove(move, castling);
+      });
+
+      function broadcastStartGame() {
+        socket.emit("broadcastStartGame");
+      }
+
+      function broadcastMove(move, castling) {
+        socket.emit("broadcastMove", move, castling);
       }
     </script>
 
