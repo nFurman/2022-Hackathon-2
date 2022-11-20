@@ -14,6 +14,7 @@
     <button onclick="sendMessage()">Send Message</button>
     <h2></h2>
     <script>
+      console.log("receieved message");
       const socket = io("http://localhost:3000/");
       socket.on("connection", () => {
         console.log(socket.id);
@@ -22,16 +23,18 @@
       socket.on("message", (data) => {
         let h2 = (document.querySelector("h2").innerHTML = data);
       });
-
       const sendMessage = () => {
         let userInput = document.querySelector(".message").value;
         socket.emit("message", userInput);
-        console.log("hello");
       };
+
+      socket.on("receiveMove", (data) => {});
+      function broadcastMove(move) {
+        socket.emit("broadcastMove", move);
+      }
     </script>
 
     <script type="text/javascript" src="resources.js"></script>
-    <script type="text/javascript" src="classes.js"></script>
     <script type="text/javascript" src="script.js"></script>
   </body>
 </html>
