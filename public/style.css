@@ -38,10 +38,20 @@ body {
   background-color: black;
   color: white;
 }
+
+.create-account {
+  width: 120px;
+  height: 30px;
+  border-radius: 35px;
+  margin-bottom: 40px;
+  background-color: black;
+  color: white;
+}
+
 .container {
   height: 90vh;
   width: 90vw;
-  margin: 2rem auto;
+  margin: 0.5rem auto;
   display: grid;
   grid-template-areas:
     "header header header"
