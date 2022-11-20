@@ -1,5 +1,3 @@
-//import $ from "jquery";
-
 const BOARD_ELEMENT = document.getElementById("board_container");
 
 const TILE_SIZE = 70;
@@ -106,24 +104,24 @@ function setUpBoard() {
     realBoard[1][c] = ["white", "p"];
   }
 
-  realBoard[7][0] = ["black", "r"];
-  realBoard[7][7] = ["black", "r"];
+  realBoard[7][0] = ["black", "r", true];
+  realBoard[7][7] = ["black", "r", true];
   realBoard[7][1] = ["black", "n"];
   realBoard[7][6] = ["black", "n"];
   realBoard[7][2] = ["black", "b"];
   realBoard[7][5] = ["black", "b"];
 
-  realBoard[0][0] = ["white", "r"];
-  realBoard[0][7] = ["white", "r"];
+  realBoard[0][0] = ["white", "r", true];
+  realBoard[0][7] = ["white", "r", true];
   realBoard[0][1] = ["white", "n"];
   realBoard[0][6] = ["white", "n"];
   realBoard[0][2] = ["white", "b"];
   realBoard[0][5] = ["white", "b"];
 
-  realBoard[7][4] = ["black", "q"];
-  realBoard[7][3] = ["black", "k"];
+  realBoard[7][3] = ["black", "q"];
+  realBoard[7][4] = ["black", "k", true];
   realBoard[0][3] = ["white", "q"];
-  realBoard[0][4] = ["white", "k"];
+  realBoard[0][4] = ["white", "k", true];
 
   drawStartPieces();
 }
@@ -366,6 +364,33 @@ function canReach(move) {
   }
 }
 
+function checkForMate(color, board) {
+  console.log("chouesr");
+  for (let r in board) {
+    for (let c in board[r]) {
+      if (board[r][c][0] === color) {
+        for (let rr in board) {
+          for (let cc in board[r]) {
+            let move = {
+              side: color,
+              piece: board[r][c],
+              startRow: +r,
+              startCol: +c,
+              endRow: +rr,
+              endCol: +cc,
+            };
+            if (checkLegalMove(move)) {
+              console.log("not mate because " + move);
+              return false;
+            }
+          }
+        }
+      }
+    }
+  }
+  return true;
+}
+
 //returns true or false
 function checkForCheck(color, board) {
   let oppositeColor = color === "white" ? "black" : "white";
@@ -404,7 +429,6 @@ function checkForCheck(color, board) {
       potentialThreat[0] === oppositeColor &&
       (potentialThreat[1] === "r" || potentialThreat[1] === "q")
     ) {
-      console.log("check!");
       return true;
     }
     if (potentialThreat[0] === "empty") {
@@ -424,7 +448,6 @@ function checkForCheck(color, board) {
       potentialThreat[0] === oppositeColor &&
       (potentialThreat[1] === "r" || potentialThreat[1] === "q")
     ) {
-      console.log("check!");
       return true;
     }
     if (potentialThreat[0] === "empty") {
@@ -444,7 +467,6 @@ function checkForCheck(color, board) {
       potentialThreat[0] === oppositeColor &&
       (potentialThreat[1] === "r" || potentialThreat[1] === "q")
     ) {
-      console.log("check!");
       return true;
     }
     if (board[kingRow][kingCol + d][0] === "empty") {
@@ -464,7 +486,6 @@ function checkForCheck(color, board) {
       potentialThreat[0] === oppositeColor &&
       (potentialThreat[1] === "r" || potentialThreat[1] === "q")
     ) {
-      console.log("check!");
       return true;
     }
     if (potentialThreat[0] === "empty") {
@@ -486,10 +507,9 @@ function checkForCheck(color, board) {
       potentialThreat[0] === oppositeColor &&
       (potentialThreat[1] === "b" || potentialThreat[1] === "q")
     ) {
-      console.log("check!");
       return true;
     }
-    if (potentialThreat === "empty") {
+    if (potentialThreat[0] === "empty") {
       d++;
     } else {
       keepGoing = false;
@@ -506,7 +526,6 @@ function checkForCheck(color, board) {
       potentialThreat[0] === oppositeColor &&
       (potentialThreat[1] === "b" || potentialThreat[1] === "q")
     ) {
-      console.log("check!");
       return true;
     }
     if (potentialThreat[0] === "empty") {
@@ -526,7 +545,6 @@ function checkForCheck(color, board) {
       potentialThreat[0] === oppositeColor &&
       (potentialThreat[1] === "b" || potentialThreat[1] === "q")
     ) {
-      console.log("check!");
       return true;
     }
     if (potentialThreat[0] == "empty") {
@@ -546,7 +564,6 @@ function checkForCheck(color, board) {
       potentialThreat[0] === oppositeColor &&
       (potentialThreat[1] === "b" || potentialThreat[1] === "q")
     ) {
-      console.log("check!");
       return true;
     }
     if (potentialThreat[0] === "empty") {
@@ -561,24 +578,19 @@ function checkForCheck(color, board) {
   function checkKnightCheck(knightRow, knightCol) {
     knightRow += kingRow;
     knightCol += kingCol;
+
     if (knightRow < 0 || knightRow > 7 || knightCol < 0 || knightCol > 7) {
       return false;
     }
-    if (board[knightRow][knightCol] === [oppositeColor, "n"]) {
-      console.log("check!");
+    if (
+      board[knightRow][knightCol][0] === oppositeColor &&
+      board[knightRow][knightCol][1] === "n"
+    ) {
       return true;
     }
     return false;
   }
 
-  //   if (checkKnightCheck(kingRow + 2, kingCol + 1)) return true;
-  //   if (checkKnightCheck(kingRow + 1, kingCol + 2)) return true;
-  //   if (checkKnightCheck(kingRow - 1, kingCol + 2)) return true;
-  //   if (checkKnightCheck(kingRow - 2, kingCol + 1)) return true;
-  //   if (checkKnightCheck(kingRow + 2, kingCol - 1)) return true;
-  //   if (checkKnightCheck(kingRow + 1, kingCol - 2)) return true;
-  //   if (checkKnightCheck(kingRow - 1, kingCol - 2)) return true;
-  //   if (checkKnightCheck(kingRow - 2, kingCol - 1)) return true;
   if (checkKnightCheck(2, 1)) return true;
   if (checkKnightCheck(1, 2)) return true;
   if (checkKnightCheck(-1, 2)) return true;
@@ -647,12 +659,40 @@ function checkForCheck(color, board) {
 }
 
 function checkCastleAttempt(move) {
+  //can return either "queenside" "kingside" or "none"
   if (realBoard[move.startRow][move.startCol][0] != "k") {
-    return false;
+    return "none";
   }
-  if (realBoard[move.startRow][move.startCol][2] === "true") {
-    return false;
+  if (realBoard[move.startRow][move.startCol][2] === true) {
+    //checks if king can castle
+    if (move.side === "white" && move.endRow === 0) {
+      if (move.endCol === 1) {
+        if (realBoard[0][0][1] === "r" && realBoard[0][0][2] === true) {
+          return "kingside";
+        }
+      } else if (move.endCol === 6) {
+        if (realBoard[0][7][1] === "r" && realBoard[0][7][2] === true) {
+          return "queenside";
+        }
+      }
+    } else if (move.side === "black" && move.endRow === 7) {
+      if (move.endCol === 1) {
+        if (realBoard[7][0][1] === "r" && realBoard[7][0][2] === true) {
+          return "kingside";
+        }
+      } else if (move.endCol === 6) {
+        if (realBoard[7][7][1] === "r" && realBoard[7][7][2] === true) {
+          return "queenside";
+        }
+      }
+    }
   }
+  return "none";
+}
+
+function recieveMove(move) {
+  updateHTMLBoard(move);
+  updateBoardArray(realBoard, move);
 }
 
 function makeMove(move) {
@@ -660,8 +700,18 @@ function makeMove(move) {
     updateHTMLBoard(move);
     updateBoardArray(realBoard, move);
 
+    let oppositeColor = move.side === "white" ? "black" : "white";
+
+    if (checkForCheck(oppositeColor, realBoard)) {
+      console.log("cjeck!");
+      if (checkForMate(oppositeColor, realBoard)) {
+        alert("gg");
+        console.log("mate ");
+      }
+    }
     turn++;
-    emitMove(move);
+
+    broadcastMove(move);
   } else {
     //do stuff
   }
@@ -674,7 +724,12 @@ function updateBoardArray(board, move) {
   board[move.startRow][move.startCol] = ["empty"];
 
   //prevents king from castling
-  if (board[move.endRow][move.endCol][1] === ["k"]) {
+  if (board[move.endRow][move.endCol][1] === "k") {
+    board[move.endRow][move.endCol][2] = false;
+    //the 2nd index of the tile correlates to the kings ability to castle
+  }
+  //same with rook
+  if (board[move.endRow][move.endCol][1] === "r") {
     board[move.endRow][move.endCol][2] = false;
     //the 2nd index of the tile correlates to the kings ability to castle
   }
@@ -740,15 +795,7 @@ function drop(e, item) {
   //"item" could be tile or piece
   //is called whenever a piece is dropped down
   e.preventDefault();
-  //   console.log(
-  //     board[pieceCurrentlyDragged[0]][pieceCurrentlyDragged[1]] +
-  //       " that was at " +
-  //       pieceCurrentlyDragged +
-  //       " is going to " +
-  //       item.dataset.row +
-  //       ", " +
-  //       item.dataset.col
-  //   );
+
   let pieceInfo = realBoard[pieceCurrentlyDragged[0]][pieceCurrentlyDragged[1]];
   makeMove({
     side: pieceInfo[0],
@@ -762,5 +809,4 @@ function drop(e, item) {
 
 function dragover(e) {
   e.preventDefault();
-  //console.log("cum");
 }
