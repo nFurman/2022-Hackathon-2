@@ -27,8 +27,11 @@ app.get("/homepage", (req, res) => {
   console.log("on the homepage");
 });
 
+let usersConnected = [];
 io.on("connection", (Socket) => {
-  console.log("User connected:" + Socket.id);
+  usersConnected.push(Socket.id);
+  console.log("User connected:" + usersConnected);
+
   //console.log(Socket);
 
   Socket.on("message", (data) => {
