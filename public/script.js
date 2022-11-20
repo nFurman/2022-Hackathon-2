@@ -2,29 +2,39 @@
 
 const BOARD_ELEMENT = document.getElementById("board_container");
 
-const TILE_SIZE = 50;
+const TILE_SIZE = 70;
 
 const BOARD_SIZE = TILE_SIZE * 8;
 BOARD_ELEMENT.style.height = BOARD_SIZE + "px";
 BOARD_ELEMENT.style.width = BOARD_SIZE + "px";
 
-let board = [];
+let realBoard = [];
+let hypotheticalBoard = [];
 let turn = 0;
 
-let playerPerspectiveIsWhite = false;
+let playerPerspectiveIsWhite = true;
+
+const availableMoves = {
+  white: {},
+  black: {},
+};
 
 function makeGrid() {
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       let newSquare = document.createElement("div");
       newSquare.classList.add("tile");
+      newSquare.width = TILE_SIZE;
+      newSquare.height = TILE_SIZE;
+
       if (playerPerspectiveIsWhite) {
         newSquare.dataset.row = 7 - row;
-        newSquare.dataset.col = 7 - col;
+        newSquare.dataset.col = col;
       } else {
         newSquare.dataset.row = row;
-        newSquare.dataset.col = col;
+        newSquare.dataset.col = 7 - col;
       }
+
       if ((row + col) % 2 == 0) {
         newSquare.classList.add("light");
       } else {
@@ -49,20 +59,17 @@ function makeEmptyBoard() {
   return resultingBoard;
 }
 
-function drawPiece(color, piece, row, col) {
+function drawPiece(color, piece, row, col, idCount) {
   row = +row;
   col = +col;
   //console.log( "trying to draw a " + color + " " + piece + " at " + row + " " + col);
   let pieceImage = document.createElement("img");
   pieceImage.src = color === "white" ? whitePieces[piece] : blackPieces[piece];
   pieceImage.className = "piece";
-  if (playerPerspectiveIsWhite) {
-    pieceImage.dataset.row = row;
-    pieceImage.dataset.col = col;
-  } else {
-    pieceImage.dataset.row = 7 - row;
-    pieceImage.dataset.col = 7 - col;
-  }
+  pieceImage.dataset.row = row;
+  pieceImage.dataset.col = col;
+  pieceImage.id = idCount;
+
   pieceImage.draggable = true;
   pieceImage.width = TILE_SIZE;
   pieceImage.height = TILE_SIZE;
@@ -77,80 +84,102 @@ function drawPiece(color, piece, row, col) {
   BOARD_ELEMENT.appendChild(pieceImage);
 }
 
-function drawStartPieces(board) {
-  for (let r in board) {
-    for (let c in board[r]) {
+function drawStartPieces() {
+  let idCount = 0;
+  for (let r in realBoard) {
+    for (let c in realBoard[r]) {
       r = +r;
       c = +c;
-      let piece = board[r][c]; //either ["empty"] or ["color", "piece"]
-      if (piece != "empty") {
-        drawPiece(piece[0], piece[1], r, c);
+      let piece = realBoard[r][c]; //either ["empty"] or ["color", "piece"]
+      if (piece[0] != "empty") {
+        drawPiece(piece[0], piece[1], r, c, idCount);
+        idCount++;
       }
     }
   }
 }
 
 function setUpBoard() {
-  board = makeEmptyBoard();
+  realBoard = makeEmptyBoard();
   for (let c = 0; c < 8; c++) {
-    board[6][c] = ["black", "p"];
-    board[1][c] = ["white", "p"];
+    realBoard[6][c] = ["black", "p"];
+    realBoard[1][c] = ["white", "p"];
   }
 
-  board[7][0] = ["black", "r"];
-  board[7][7] = ["black", "r"];
-  board[7][1] = ["black", "n"];
-  board[7][6] = ["black", "n"];
-  board[7][2] = ["black", "b"];
-  board[7][5] = ["black", "b"];
+  realBoard[7][0] = ["black", "r"];
+  realBoard[7][7] = ["black", "r"];
+  realBoard[7][1] = ["black", "n"];
+  realBoard[7][6] = ["black", "n"];
+  realBoard[7][2] = ["black", "b"];
+  realBoard[7][5] = ["black", "b"];
 
-  board[0][0] = ["white", "r"];
-  board[0][7] = ["white", "r"];
-  board[0][1] = ["white", "n"];
-  board[0][6] = ["white", "n"];
-  board[0][2] = ["white", "b"];
-  board[0][5] = ["white", "b"];
+  realBoard[0][0] = ["white", "r"];
+  realBoard[0][7] = ["white", "r"];
+  realBoard[0][1] = ["white", "n"];
+  realBoard[0][6] = ["white", "n"];
+  realBoard[0][2] = ["white", "b"];
+  realBoard[0][5] = ["white", "b"];
 
-  board[7][4] = ["black", "q"];
-  board[7][3] = ["black", "k"];
-  board[0][3] = ["white", "q"];
-  board[0][4] = ["white", "k"];
+  realBoard[7][4] = ["black", "q"];
+  realBoard[7][3] = ["black", "k"];
+  realBoard[0][3] = ["white", "q"];
+  realBoard[0][4] = ["white", "k"];
 
-  drawStartPieces(board);
+  drawStartPieces();
 }
 
 setUpBoard();
 
-//console.log(board);
-
 function checkLegalMove(move) {
+  if (
+    (turn % 2 == 0 && move.side == "black") ||
+    (turn % 2 == 1 && move.side == "white")
+  ) {
+    return false;
+  }
   if (checkCastleAttempt(move)) {
     //do stuff
-    return;
+    return true;
   }
-  let endSquare = board[move.endRow][move.endCol];
-  if (endSquare === "empty") {
+  let endSquare = realBoard[move.endRow][move.endCol];
+  if (endSquare[0] === "empty") {
     if (canReach(move)) {
-      return true;
+      hypotheticalBoard = JSON.parse(JSON.stringify(realBoard));
+      updateBoardArray(hypotheticalBoard, move);
+      if (checkForCheck(move.side, hypotheticalBoard)) {
+        console.log("invalid move");
+        return false;
+      } else {
+        console.log("valid move");
+
+        return true;
+      }
     } else {
       return false;
     }
   }
-
   if (move.side != endSquare[0]) {
     //0th index corresponds to color of piece on square
     if (canReach(move)) {
-      return true;
+      hypotheticalBoard = JSON.parse(JSON.stringify(realBoard));
+      updateBoardArray(hypotheticalBoard, move);
+      if (checkForCheck(move.side, hypotheticalBoard)) {
+        console.log("invalid move");
+        return false;
+      } else {
+        console.log("valid asf move");
+        return true;
+      }
     } else {
       return false;
     }
   }
-
   return false;
 }
 
 //checks if the move is valid (doesnt go through other pieces)
 function canReach(move) {
+  let board = realBoard;
   let { side, piece, startRow, startCol, endRow, endCol } = move;
   let endSquare = board[endRow][endCol];
   switch (piece) {
@@ -159,23 +188,25 @@ function canReach(move) {
         case "white":
           if (
             endCol === startCol &&
-            endRow - startRow === 2 &&
-            board[endRow][endCol] === "empty" &&
-            board[endRow - 1][endCol] === "empty"
+            startRow === 1 &&
+            endRow === 3 &&
+            board[endRow][endCol][0] === "empty" &&
+            board[endRow - 1][endCol][0] === "empty"
           ) {
             return true;
           }
+
           if (
             endCol === startCol &&
             endRow - startRow === 1 &&
-            endSquare === "empty"
+            endSquare[0] === "empty"
           ) {
             return true;
           }
           if (
             Math.abs(endCol - startCol) === 1 &&
             endRow - startRow === 1 &&
-            endSquare != "empty"
+            endSquare[0] != "empty"
           ) {
             return true;
           }
@@ -183,23 +214,24 @@ function canReach(move) {
         case "black":
           if (
             endCol === startCol &&
-            endRow - startRow === -2 &&
-            board[endRow][endCol] === "empty" &&
-            board[endRow + 1][endCol] === "empty"
+            startRow === 6 &&
+            endRow === 4 &&
+            board[endRow][endCol][0] === "empty" &&
+            board[endRow + 1][endCol][0] === "empty"
           ) {
             return true;
           }
           if (
             endCol === startCol &&
             endRow - startRow === -1 &&
-            endSquare === "empty"
+            endSquare[0] === "empty"
           ) {
             return true;
           }
           if (
             Math.abs(endCol - startCol) === 1 &&
             endRow - startRow === -1 &&
-            endSquare != "empty"
+            endSquare[0] != "empty"
           ) {
             return true;
           }
@@ -212,13 +244,13 @@ function canReach(move) {
       }
       if (startCol === endCol) {
         for (let r = startRow + 1; r < endRow; r++) {
-          if (board[r][startCol] != "empty") return false;
+          if (board[r][startCol][0] != "empty") return false;
         }
         return true;
       }
       if (startRow === endRow) {
         for (let c = startCol + 1; c < endCol; c++) {
-          if (board[startRow][c] != "empty") return false;
+          if (board[startRow][c][0] != "empty") return false;
         }
         return true;
       }
@@ -232,13 +264,13 @@ function canReach(move) {
         if (endRow - startRow > 0) {
           //going to the topright
           for (let i = 1; i < endRow - startRow; i++) {
-            if (board[startRow + i][startCol + i] != "empty") return false;
+            if (board[startRow + i][startCol + i][0] != "empty") return false;
           }
           return true;
         } else {
           //going to the bottomleft
           for (let i = -1; i > endRow - startRow; i--) {
-            if (board[startRow + i][startCol + i] != "empty") return false;
+            if (board[startRow + i][startCol + i][0] != "empty") return false;
           }
           return true;
         }
@@ -248,13 +280,13 @@ function canReach(move) {
         if (endRow - startRow > 0) {
           //going to the bottomright
           for (let i = 1; i < endRow - startRow; i++) {
-            if (board[startRow + i][startCol - i] != "empty") return false;
+            if (board[startRow + i][startCol - i][0] != "empty") return false;
           }
           return true;
         } else {
           //going to the topleft
           for (let i = -1; i > endRow - startRow; i--) {
-            if (board[startRow + i][startCol - i] != "empty") return false;
+            if (board[startRow + i][startCol - i][0] != "empty") return false;
           }
           return true;
         }
@@ -266,13 +298,13 @@ function canReach(move) {
 
         if (startCol === endCol) {
           for (let r = startRow + 1; r < endRow; r++) {
-            if (board[r][startCol] != "empty") return false;
+            if (board[r][startCol][0] != "empty") return false;
           }
           return true;
         }
         if (startRow === endRow) {
           for (let c = startCol + 1; c < endCol; c++) {
-            if (board[startRow][c] != "empty") return false;
+            if (board[startRow][c][0] != "empty") return false;
           }
           return true;
         }
@@ -284,13 +316,29 @@ function canReach(move) {
           if (endRow - startRow > 0) {
             //going to the topright
             for (let i = 1; i < endRow - startRow; i++) {
-              if (board[startRow + i][startCol + i] != "empty") return false;
+              if (board[startRow + i][startCol + i][0] != "empty") return false;
             }
             return true;
           } else {
             //going to the bottomleft
             for (let i = -1; i > endRow - startRow; i--) {
-              if (board[startRow + i][startCol + i] != "empty") return false;
+              if (board[startRow + i][startCol + i][0] != "empty") return false;
+            }
+            return true;
+          }
+        }
+        if (endRow - startRow === -1 * (endCol - startCol)) {
+          //diagonal case
+          if (endRow - startRow > 0) {
+            //going to the bottomright
+            for (let i = 1; i < endRow - startRow; i++) {
+              if (board[startRow + i][startCol - i][0] != "empty") return false;
+            }
+            return true;
+          } else {
+            //going to the topleft
+            for (let i = -1; i > endRow - startRow; i--) {
+              if (board[startRow + i][startCol - i][0] != "empty") return false;
             }
             return true;
           }
@@ -318,53 +366,299 @@ function canReach(move) {
   }
 }
 
-function checkCastleAttempt(move) {
-  if (
-    board[move.startRow][move.startCol][0] === "k" &&
-    board[move.startRow][move.startCol][2] === "true"
-  ) {
-    return true;
+//returns true or false
+function checkForCheck(color, board) {
+  let oppositeColor = color === "white" ? "black" : "white";
+  let kingRow, kingCol;
+
+  for (let r in board) {
+    for (let c in board[r]) {
+      if (board[r][c][0] === color && board[r][c][1] === "k") {
+        kingRow = +r;
+        kingCol = +c;
+      }
+    }
+  }
+  console.log(
+    "checking for check: " +
+      color +
+      " king at " +
+      kingRow +
+      ", " +
+      kingCol +
+      "."
+  );
+
+  let d; //distance from king square
+  let keepGoing;
+
+  //checks for rook moves (include queen)
+
+  d = 1;
+  keepGoing = true;
+
+  //checks for the rows greater than kingrow
+  while (kingRow + d < 8 && keepGoing) {
+    let potentialThreat = board[kingRow + d][kingCol];
+    if (
+      potentialThreat[0] === oppositeColor &&
+      (potentialThreat[1] === "r" || potentialThreat[1] === "q")
+    ) {
+      console.log("check!");
+      return true;
+    }
+    if (potentialThreat[0] === "empty") {
+      d++;
+    } else {
+      keepGoing = false;
+    }
+  }
+
+  //checks for the rows less than kingrow
+
+  d = 1;
+  keepGoing = true;
+  while (kingRow - d > -1 && keepGoing) {
+    let potentialThreat = board[kingRow - d][kingCol];
+    if (
+      potentialThreat[0] === oppositeColor &&
+      (potentialThreat[1] === "r" || potentialThreat[1] === "q")
+    ) {
+      console.log("check!");
+      return true;
+    }
+    if (potentialThreat[0] === "empty") {
+      d++;
+    } else {
+      keepGoing = false;
+    }
+  }
+
+  //checks for the cols greater than kingrow
+
+  d = 1;
+  keepGoing = true;
+  while (kingCol + d < 8 && keepGoing) {
+    let potentialThreat = board[kingRow][kingCol + d];
+    if (
+      potentialThreat[0] === oppositeColor &&
+      (potentialThreat[1] === "r" || potentialThreat[1] === "q")
+    ) {
+      console.log("check!");
+      return true;
+    }
+    if (board[kingRow][kingCol + d][0] === "empty") {
+      d++;
+    } else {
+      keepGoing = false;
+    }
+  }
+
+  //checks for the cols less than kingrow
+
+  d = 1;
+  keepGoing = true;
+  while (kingCol - d > -1 && keepGoing) {
+    let potentialThreat = board[kingRow][kingCol - d];
+    if (
+      potentialThreat[0] === oppositeColor &&
+      (potentialThreat[1] === "r" || potentialThreat[1] === "q")
+    ) {
+      console.log("check!");
+      return true;
+    }
+    if (potentialThreat[0] === "empty") {
+      d++;
+    } else {
+      keepGoing = false;
+    }
+  }
+
+  //checks for bishop moves (include queen)
+
+  d = 1;
+  keepGoing = true;
+
+  //checks top right of king
+  while (keepGoing && kingRow + d < 8 && kingCol + d < 8) {
+    let potentialThreat = board[kingRow + d][kingCol + d];
+    if (
+      potentialThreat[0] === oppositeColor &&
+      (potentialThreat[1] === "b" || potentialThreat[1] === "q")
+    ) {
+      console.log("check!");
+      return true;
+    }
+    if (potentialThreat === "empty") {
+      d++;
+    } else {
+      keepGoing = false;
+    }
+  }
+
+  d = 1;
+  keepGoing = true;
+
+  //checks top left of king
+  while (keepGoing && kingRow + d < 8 && kingCol - d > 0) {
+    let potentialThreat = board[kingRow + d][kingCol - d];
+    if (
+      potentialThreat[0] === oppositeColor &&
+      (potentialThreat[1] === "b" || potentialThreat[1] === "q")
+    ) {
+      console.log("check!");
+      return true;
+    }
+    if (potentialThreat[0] === "empty") {
+      d++;
+    } else {
+      keepGoing = false;
+    }
+  }
+
+  d = 1;
+  keepGoing = true;
+
+  //checks bottom left of king
+  while (keepGoing && kingRow - d > 0 && kingCol - d > 0) {
+    let potentialThreat = board[kingRow - d][kingCol - d];
+    if (
+      potentialThreat[0] === oppositeColor &&
+      (potentialThreat[1] === "b" || potentialThreat[1] === "q")
+    ) {
+      console.log("check!");
+      return true;
+    }
+    if (potentialThreat[0] == "empty") {
+      d++;
+    } else {
+      keepGoing = false;
+    }
+  }
+
+  d = 1;
+  keepGoing = true;
+
+  //checks bottom right of king
+  while (keepGoing && kingRow - d > 0 && kingCol + d < 8) {
+    let potentialThreat = board[kingRow - d][kingCol + d];
+    if (
+      potentialThreat[0] === oppositeColor &&
+      (potentialThreat[1] === "b" || potentialThreat[1] === "q")
+    ) {
+      console.log("check!");
+      return true;
+    }
+    if (potentialThreat[0] === "empty") {
+      d++;
+    } else {
+      keepGoing = false;
+    }
+  }
+
+  //checks for knight moves
+
+  function checkKnightCheck(knightRow, knightCol) {
+    knightRow += kingRow;
+    knightCol += kingCol;
+    if (knightRow < 0 || knightRow > 7 || knightCol < 0 || knightCol > 7) {
+      return false;
+    }
+    if (board[knightRow][knightCol] === [oppositeColor, "n"]) {
+      console.log("check!");
+      return true;
+    }
+    return false;
+  }
+
+  //   if (checkKnightCheck(kingRow + 2, kingCol + 1)) return true;
+  //   if (checkKnightCheck(kingRow + 1, kingCol + 2)) return true;
+  //   if (checkKnightCheck(kingRow - 1, kingCol + 2)) return true;
+  //   if (checkKnightCheck(kingRow - 2, kingCol + 1)) return true;
+  //   if (checkKnightCheck(kingRow + 2, kingCol - 1)) return true;
+  //   if (checkKnightCheck(kingRow + 1, kingCol - 2)) return true;
+  //   if (checkKnightCheck(kingRow - 1, kingCol - 2)) return true;
+  //   if (checkKnightCheck(kingRow - 2, kingCol - 1)) return true;
+  if (checkKnightCheck(2, 1)) return true;
+  if (checkKnightCheck(1, 2)) return true;
+  if (checkKnightCheck(-1, 2)) return true;
+  if (checkKnightCheck(-2, 1)) return true;
+  if (checkKnightCheck(2, -1)) return true;
+  if (checkKnightCheck(1, -2)) return true;
+  if (checkKnightCheck(-1, -2)) return true;
+  if (checkKnightCheck(-2, -1)) return true;
+  //fuck off i know it doesnt look good but its fast and straightforward
+
+  //checks for kings touching
+
+  for (let rowD = -1; rowD < 2; rowD++) {
+    if (kingRow + rowD < 0 || kingRow + rowD > 7) continue;
+    for (let colD = -1; colD < 2; colD++) {
+      if (kingCol + colD < 0 || kingCol + colD > 7) continue;
+      let potentialSquare = board[kingRow + rowD][kingCol + colD];
+      if (potentialSquare[0] === oppositeColor && potentialSquare[1] === "k") {
+        return true;
+      }
+    }
+  }
+
+  //checks for pawn moves
+
+  if (color === "white") {
+    if (kingRow < 6) {
+      if (kingCol > 0) {
+        if (
+          board[kingRow + 1][kingCol - 1][0] === oppositeColor &&
+          board[kingRow + 1][kingCol - 1][0] === "p"
+        ) {
+          return true;
+        }
+      }
+      if (kingCol < 7) {
+        if (
+          board[kingRow + 1][kingCol + 1][0] === oppositeColor &&
+          board[kingRow + 1][kingCol + 1][0] === "p"
+        ) {
+          return true;
+        }
+      }
+    }
   } else {
+    if (kingRow > 1) {
+      if (kingCol > 0) {
+        if (
+          board[kingRow - 1][kingCol - 1][0] === oppositeColor &&
+          board[kingRow - 1][kingCol - 1][0] === "p"
+        ) {
+          return true;
+        }
+      }
+      if (kingCol < 7) {
+        if (
+          board[kingRow - 1][kingCol + 1][0] === oppositeColor &&
+          board[kingRow - 1][kingCol + 1][0] === "p"
+        ) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function checkCastleAttempt(move) {
+  if (realBoard[move.startRow][move.startCol][0] != "k") {
+    return false;
+  }
+  if (realBoard[move.startRow][move.startCol][2] === "true") {
     return false;
   }
 }
 
 function makeMove(move) {
   if (checkLegalMove(move)) {
-    //updates the html piece elements
-    if (board[move.endRow][move.endCol] != "empty") {
-      let capturedPiece = getPieceByRowCol(move.endRow, move.endCol);
-      capturedPiece.remove();
-    }
-    let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
-    console.log(movingPiece);
-    if (playerPerspectiveIsWhite) {
-      movingPiece.style.left = TILE_SIZE * move.endCol + "px";
-      movingPiece.style.top = BOARD_SIZE - TILE_SIZE * (move.endRow + 1) + "px";
-    } else {
-      movingPiece.style.left =
-        BOARD_SIZE - TILE_SIZE * (move.endCol + 1) + "px";
-      movingPiece.style.top = TILE_SIZE * move.endRow + +"px";
-    }
-    if (playerPerspectiveIsWhite) {
-      movingPiece.dataset.row = move.endRow;
-      movingPiece.dataset.col = move.endCol;
-    } else {
-      movingPiece.dataset.row = 7 - move.endRow;
-      movingPiece.dataset.col = 7 - move.endCol;
-    }
-
-    //updates the board array
-    board[move.endRow][move.endCol] = JSON.parse(
-      JSON.stringify(board[move.startRow][move.startCol])
-    );
-    board[move.startRow][move.startCol] = "empty";
-
-    //prevents king from castling
-    if (board[move.endRow][move.endCol][1] === ["k"]) {
-      board[move.endRow][move.endCol][2] = false;
-      //the 2nd index of the tile correlates to the kings ability to castle
-    }
+    updateHTMLBoard(move);
+    updateBoardArray(realBoard, move);
 
     turn++;
   } else {
@@ -372,38 +666,47 @@ function makeMove(move) {
   }
 }
 
-function getPieceByRowCol(row, col) {
-  if (playerPerspectiveIsWhite) {
-    return document.querySelector(
-      '.piece[data-row="' + row + '"][data-col="' + col + '"]'
-    );
-  } else {
-    return document.querySelector(
-      '.piece[data-row="' + 7 - row + '"][data-col="' + 7 - col + '"]'
-    );
+function updateBoardArray(board, move) {
+  board[move.endRow][move.endCol] = JSON.parse(
+    JSON.stringify(board[move.startRow][move.startCol])
+  );
+  board[move.startRow][move.startCol] = ["empty"];
+
+  //prevents king from castling
+  if (board[move.endRow][move.endCol][1] === ["k"]) {
+    board[move.endRow][move.endCol][2] = false;
+    //the 2nd index of the tile correlates to the kings ability to castle
   }
 }
 
-function animateMove(move) {
-  let movingPiece = getPieceByRowCol(move.endRow, move.endCol);
+function updateHTMLBoard(move) {
+  if (realBoard[move.endRow][move.endCol][0] != "empty") {
+    let capturedPiece = getPieceByRowCol(move.endRow, move.endCol);
+    console.log("captured a piece: " + capturedPiece);
+    capturedPiece.remove();
+  }
+  let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
+  if (playerPerspectiveIsWhite) {
+    movingPiece.style.left = TILE_SIZE * move.endCol + "px";
+    movingPiece.style.top = BOARD_SIZE - TILE_SIZE * (move.endRow + 1) + "px";
+  } else {
+    movingPiece.style.left = BOARD_SIZE - TILE_SIZE * (move.endCol + 1) + "px";
+    movingPiece.style.top = TILE_SIZE * move.endRow + "px";
+  }
+
+  movingPiece.dataset.row = move.endRow;
+  movingPiece.dataset.col = move.endCol;
 }
 
-let testMove = new Move("white", "n", 0, 6, 2, 5);
+function getPieceByRowCol(row, col) {
+  return document.querySelector(
+    '.piece[data-row="' + row + '"][data-col="' + col + '"]'
+  );
+}
 
-let testMove2 = new Move("white", "n", 2, 5, 4, 6);
-let testMove3 = new Move("white", "n", 4, 6, 6, 5);
-
-let testMove4 = new Move("white", "n", 6, 5, 5, 3);
-
-console.log(board[2][5]);
-
-//makeMove(testMove);
-// makeMove(testMove2);
-// makeMove(testMove3);
-
-// makeMove(testMove4);
-
-console.log(board[2][5]);
+function animateMove(move) {
+  // let movingPiece = getPieceByRowCol(move.endRow, move.endCol);
+}
 
 let pieceCurrentlyDragged = []; //[row, col]
 
@@ -420,19 +723,43 @@ document.querySelectorAll(".piece").forEach((piece) => {
   piece.addEventListener("dragstart", (e) => {
     dragstart(piece);
   });
+  piece.addEventListener("dragover", (e) => {
+    dragover(e);
+  });
+  piece.addEventListener("drop", (e) => {
+    drop(e, piece);
+  });
 });
 
 function dragstart(piece) {
-  pieceCurrentlyDragged = [+piece.dataset.row, +piece.dataset.col];
+  pieceCurrentlyDragged = [piece.dataset.row, +piece.dataset.col];
 }
 
-function drop(e, tile) {
+function drop(e, item) {
+  //"item" could be tile or piece
   //is called whenever a piece is dropped down
   e.preventDefault();
-  console.log(tile.dataset.row);
+  //   console.log(
+  //     board[pieceCurrentlyDragged[0]][pieceCurrentlyDragged[1]] +
+  //       " that was at " +
+  //       pieceCurrentlyDragged +
+  //       " is going to " +
+  //       item.dataset.row +
+  //       ", " +
+  //       item.dataset.col
+  //   );
+  let pieceInfo = realBoard[pieceCurrentlyDragged[0]][pieceCurrentlyDragged[1]];
+  makeMove({
+    side: pieceInfo[0],
+    piece: pieceInfo[1],
+    startRow: +pieceCurrentlyDragged[0],
+    startCol: +pieceCurrentlyDragged[1],
+    endRow: +item.dataset.row,
+    endCol: +item.dataset.col,
+  });
 }
 
 function dragover(e) {
   e.preventDefault();
-  console.log("cum");
+  //console.log("cum");
 }
