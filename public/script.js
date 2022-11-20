@@ -10,7 +10,25 @@ let realBoard = [];
 let hypotheticalBoard = [];
 let turn = 0;
 
-let playerPerspectiveIsWhite = true;
+let numUsersConnected = 1;
+let playerIsWhite = false;
+
+function userConnected() {
+  numUsersConnected++;
+  console.log("i see that a user has been connected :)");
+  if (numUsersConnected == 2) {
+    playerIsWhite = true;
+    console.log("i am playiingas white");
+    startGame();
+    broadcastStartGame();
+  }
+}
+
+function startGame() {
+  makeGrid();
+  setUpBoard();
+  setupEventListeners();
+}
 
 const availableMoves = {
   white: {},
@@ -25,7 +43,7 @@ function makeGrid() {
       newSquare.width = TILE_SIZE;
       newSquare.height = TILE_SIZE;
 
-      if (playerPerspectiveIsWhite) {
+      if (playerIsWhite) {
         newSquare.dataset.row = 7 - row;
         newSquare.dataset.col = col;
       } else {
@@ -42,8 +60,6 @@ function makeGrid() {
     }
   }
 }
-
-makeGrid();
 
 function makeEmptyBoard() {
   let resultingBoard = [];
@@ -71,7 +87,7 @@ function drawPiece(color, piece, row, col, idCount) {
   pieceImage.draggable = true;
   pieceImage.width = TILE_SIZE;
   pieceImage.height = TILE_SIZE;
-  if (playerPerspectiveIsWhite) {
+  if (playerIsWhite) {
     pieceImage.style.left = TILE_SIZE * col + "px";
     pieceImage.style.top = BOARD_SIZE - TILE_SIZE * (row + 1) + "px";
   } else {
@@ -126,19 +142,32 @@ function setUpBoard() {
   drawStartPieces();
 }
 
-setUpBoard();
-
 function checkLegalMove(move) {
   if (
-    (turn % 2 == 0 && move.side == "black") ||
-    (turn % 2 == 1 && move.side == "white")
+    (turn % 2 === 0 && move.side === "black") ||
+    (turn % 2 === 1 && move.side === "white")
   ) {
     return false;
   }
-  if (checkCastleAttempt(move)) {
-    //do stuff
+  if (
+    (playerIsWhite && move.side === "black") ||
+    (!playerIsWhite && move.side === "white")
+  ) {
+    return false;
+  }
+  let castleAttemptResult = checkCastleAttempt(move);
+  if (castleAttemptResult == undefined) {
+    console.log("panic!");
+    return false;
+  }
+  if (
+    castleAttemptResult === "kingside" ||
+    castleAttemptResult === "queenside"
+  ) {
     return true;
   }
+  if (castleAttemptResult === "illegal") return false;
+
   let endSquare = realBoard[move.endRow][move.endCol];
   if (endSquare[0] === "empty") {
     if (canReach(move)) {
@@ -659,48 +688,80 @@ function checkForCheck(color, board) {
 }
 
 function checkCastleAttempt(move) {
-  //can return either "queenside" "kingside" or "none"
+  console.trace(move);
+  //can return either "queenside" "kingside" "not attempted" or "illegal"
   if (realBoard[move.startRow][move.startCol][0] != "k") {
-    return "none";
+    return "not attempted";
   }
   if (realBoard[move.startRow][move.startCol][2] === true) {
     //checks if king can castle
     if (move.side === "white" && move.endRow === 0) {
       if (move.endCol === 1) {
         if (realBoard[0][0][1] === "r" && realBoard[0][0][2] === true) {
-          return "kingside";
+          if (
+            realBoard[0][1][0] == "empty" &&
+            realBoard[0][2][0] == "empty" &&
+            realBoard[0][3][0] == "empty"
+          ) {
+            return "queenside";
+          } else {
+            return "illegal";
+          }
         }
       } else if (move.endCol === 6) {
         if (realBoard[0][7][1] === "r" && realBoard[0][7][2] === true) {
-          return "queenside";
+          if (realBoard[0][6][0] == "empty" && realBoard[0][5][0] == "empty") {
+            return "kingside";
+          } else {
+            return "illegal";
+          }
         }
       }
     } else if (move.side === "black" && move.endRow === 7) {
       if (move.endCol === 1) {
         if (realBoard[7][0][1] === "r" && realBoard[7][0][2] === true) {
-          return "kingside";
+          if (
+            realBoard[7][1][0] == "empty" &&
+            realBoard[7][2][0] == "empty" &&
+            realBoard[7][3][0] == "empty"
+          ) {
+            return "queenside";
+          } else {
+            return "illegal";
+          }
         }
       } else if (move.endCol === 6) {
         if (realBoard[7][7][1] === "r" && realBoard[7][7][2] === true) {
-          return "queenside";
+          if (realBoard[7][6][0] == "empty" && realBoard[7][5][0] == "empty") {
+            return "kingside";
+          } else {
+            return "illegal";
+          }
         }
       }
     }
   }
-  return "none";
+  return "not attempted";
 }
 
-function recieveMove(move) {
-  updateHTMLBoard(move);
-  updateBoardArray(realBoard, move);
+function receiveMove(move, castling) {
+  makeMove(move, castling);
 }
 
-function makeMove(move) {
+function makeMove(move, castling) {
+  updateHTMLBoard(move, castling);
+  updateBoardArray(realBoard, move, castling);
+  turn++;
+}
+
+function attemptMove(move) {
   if (checkLegalMove(move)) {
-    updateHTMLBoard(move);
-    updateBoardArray(realBoard, move);
+    let castling = checkCastleAttempt(move);
+    makeMove(move, castling);
 
     let oppositeColor = move.side === "white" ? "black" : "white";
+
+    broadcastMove(move, castling);
 
     if (checkForCheck(oppositeColor, realBoard)) {
       console.log("cjeck!");
@@ -709,49 +770,106 @@ function makeMove(move) {
         console.log("mate ");
       }
     }
-    turn++;
-
-    broadcastMove(move);
   } else {
     //do stuff
   }
 }
 
-function updateBoardArray(board, move) {
-  board[move.endRow][move.endCol] = JSON.parse(
-    JSON.stringify(board[move.startRow][move.startCol])
-  );
-  board[move.startRow][move.startCol] = ["empty"];
-
-  //prevents king from castling
-  if (board[move.endRow][move.endCol][1] === "k") {
-    board[move.endRow][move.endCol][2] = false;
-    //the 2nd index of the tile correlates to the kings ability to castle
+function updateBoardArray(board, move, castling = "not attempted") {
+  if (castling != "not attempted") {
+    console.log(castling);
+    console.log("castling");
   }
-  //same with rook
-  if (board[move.endRow][move.endCol][1] === "r") {
-    board[move.endRow][move.endCol][2] = false;
-    //the 2nd index of the tile correlates to the kings ability to castle
+  switch (castling) {
+    case "not attempted":
+      board[move.endRow][move.endCol] = JSON.parse(
+        JSON.stringify(board[move.startRow][move.startCol])
+      );
+      board[move.startRow][move.startCol] = ["empty"];
+
+      //prevents king from castling
+      if (board[move.endRow][move.endCol][1] === "k") {
+        board[move.endRow][move.endCol][2] = false;
+        //the 2nd index of the tile correlates to the kings ability to castle
+      }
+      //same with rook
+      if (board[move.endRow][move.endCol][1] === "r") {
+        board[move.endRow][move.endCol][2] = false;
+        //the 2nd index of the tile correlates to the kings ability to castle
+      }
+      break;
+    case "kingside":
+      //king
+      board[move.endRow][6] = JSON.parse(
+        JSON.stringify(board[move.startRow][4])
+      );
+      board[move.startRow][4] = ["empty"];
+
+      //rook
+      board[move.endRow][5] = JSON.parse(
+        JSON.stringify(board[move.startRow][7])
+      );
+      board[move.startRow][7] = ["empty"];
+
+      board[move.endRow][5][2] = false;
+      board[move.endRow][6][2] = false;
+      break;
+    case "queenside":
+      //king
+      board[move.endRow][2] = JSON.parse(
+        JSON.stringify(board[move.startRow][4])
+      );
+      board[move.startRow][4] = ["empty"];
+
+      //rook
+      board[move.endRow][3] = JSON.parse(
+        JSON.stringify(board[move.startRow][0])
+      );
+      board[move.startRow][0] = ["empty"];
+
+      board[move.endRow][2][2] = false;
+      board[move.endRow][3][2] = false;
+      break;
   }
 }
 
-function updateHTMLBoard(move) {
-  if (realBoard[move.endRow][move.endCol][0] != "empty") {
-    let capturedPiece = getPieceByRowCol(move.endRow, move.endCol);
-    console.log("captured a piece: " + capturedPiece);
-    capturedPiece.remove();
-  }
-  let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
-  if (playerPerspectiveIsWhite) {
-    movingPiece.style.left = TILE_SIZE * move.endCol + "px";
-    movingPiece.style.top = BOARD_SIZE - TILE_SIZE * (move.endRow + 1) + "px";
+function moveHTMLPiece(movingPiece, row, col) {
+  if (playerIsWhite) {
+    movingPiece.style.left = TILE_SIZE * col + "px";
+    movingPiece.style.top = BOARD_SIZE - TILE_SIZE * (row + 1) + "px";
   } else {
-    movingPiece.style.left = BOARD_SIZE - TILE_SIZE * (move.endCol + 1) + "px";
-    movingPiece.style.top = TILE_SIZE * move.endRow + "px";
+    movingPiece.style.left = BOARD_SIZE - TILE_SIZE * (col + 1) + "px";
+    movingPiece.style.top = TILE_SIZE * row + "px";
   }
+  movingPiece.dataset.row = row;
+  movingPiece.dataset.col = col;
+}
 
-  movingPiece.dataset.row = move.endRow;
-  movingPiece.dataset.col = move.endCol;
+function updateHTMLBoard(move, castling = "not attempted") {
+  let kingPiece, rookPiece;
+  switch (castling) {
+    case "not attempted":
+      if (realBoard[move.endRow][move.endCol][0] != "empty") {
+        let capturedPiece = getPieceByRowCol(move.endRow, move.endCol);
+        console.log("captured a piece: " + capturedPiece);
+        capturedPiece.remove();
+      }
+      let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
+      moveHTMLPiece(movingPiece, move.endRow, move.endCol);
+      break;
+    case "kingside":
+      kingPiece = getPieceByRowCol(move.startRow, move.startCol);
+      rookPiece = getPieceByRowCol(move.endRow, move.endCol);
+      moveHTMLPiece(kingPiece, move.endRow, 6);
+      moveHTMLPiece(rookPiece, move.startRow, 5);
+      break;
+    case "queenside":
+      kingPiece = getPieceByRowCol(move.startRow, move.startCol);
+      rookPiece = getPieceByRowCol(move.endRow, move.endCol);
+      moveHTMLPiece(kingPiece, move.endRow, 2);
+      moveHTMLPiece(rookPiece, move.startRow, 3);
+      break;
+  }
 }
 
 function getPieceByRowCol(row, col) {
@@ -766,47 +884,50 @@ function animateMove(move) {
 
 let pieceCurrentlyDragged = []; //[row, col]
 
-document.querySelectorAll(".tile").forEach((tile) => {
-  tile.addEventListener("drop", (e) => {
-    drop(e, tile);
+function setupEventListeners() {
+  document.querySelectorAll(".tile").forEach((tile) => {
+    tile.addEventListener("drop", (e) => {
+      drop(e, tile);
+    });
+    tile.addEventListener("dragover", (e) => {
+      dragover(e);
+    });
   });
-  tile.addEventListener("dragover", (e) => {
-    dragover(e);
-  });
-});
 
-document.querySelectorAll(".piece").forEach((piece) => {
-  piece.addEventListener("dragstart", (e) => {
-    dragstart(piece);
+  document.querySelectorAll(".piece").forEach((piece) => {
+    piece.addEventListener("dragstart", (e) => {
+      dragstart(piece);
+    });
+    piece.addEventListener("dragover", (e) => {
+      dragover(e);
+    });
+    piece.addEventListener("drop", (e) => {
+      drop(e, piece);
+    });
   });
-  piece.addEventListener("dragover", (e) => {
-    dragover(e);
-  });
-  piece.addEventListener("drop", (e) => {
-    drop(e, piece);
-  });
-});
 
-function dragstart(piece) {
-  pieceCurrentlyDragged = [piece.dataset.row, +piece.dataset.col];
-}
+  function dragstart(piece) {
+    pieceCurrentlyDragged = [piece.dataset.row, +piece.dataset.col];
+  }
 
-function drop(e, item) {
-  //"item" could be tile or piece
-  //is called whenever a piece is dropped down
-  e.preventDefault();
+  function drop(e, item) {
+    //"item" could be tile or piece
+    //is called whenever a piece is dropped down
+    e.preventDefault();
 
-  let pieceInfo = realBoard[pieceCurrentlyDragged[0]][pieceCurrentlyDragged[1]];
-  makeMove({
-    side: pieceInfo[0],
-    piece: pieceInfo[1],
-    startRow: +pieceCurrentlyDragged[0],
-    startCol: +pieceCurrentlyDragged[1],
-    endRow: +item.dataset.row,
-    endCol: +item.dataset.col,
-  });
-}
+    let pieceInfo =
+      realBoard[pieceCurrentlyDragged[0]][pieceCurrentlyDragged[1]];
+    attemptMove({
+      side: pieceInfo[0],
+      piece: pieceInfo[1],
+      startRow: +pieceCurrentlyDragged[0],
+      startCol: +pieceCurrentlyDragged[1],
+      endRow: +item.dataset.row,
+      endCol: +item.dataset.col,
+    });
+  }
 
-function dragover(e) {
-  e.preventDefault();
+  function dragover(e) {
+    e.preventDefault();
+  }
 }

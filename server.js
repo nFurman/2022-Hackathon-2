@@ -42,7 +42,6 @@ app.get("/homepage", (req, res) => {
   console.log("on the homepage");
 });
 
-
 knex
   .insert({ description: username, user_id: 4 })
   .into("username")
@@ -56,16 +55,21 @@ knex
 console.log(password);
 
 io.on("connection", (Socket) => {
+  console.log("User connected:" + Socket.id);
 
-  //console.log(Socket);
+  Socket.broadcast.emit("userConnected");
 
   Socket.on("message", (data) => {
     Socket.broadcast.emit("message", data);
     console.log(data);
   });
 
-  Socket.on("broadcastMove", (move) => {
-    Socket.broadcast.emit("receiveMove", move);
+  Socket.on("broadcastStartGame", () => {
+    Socket.broadcast.emit("startGame");
+  });
+
+  Socket.on("broadcastMove", (move, castling) => {
+    Socket.broadcast.emit("receiveMove", move, castling);
     console.log(move);
   });
 });
