@@ -5,15 +5,16 @@ const server = require("http").createServer(app);
 const io = require("socket.io")(server, { cors: { origin: "*" } });
 const knex = require("knex");
 
-const db = knex({
-  client: "pg",
-  connection: {
-    host: "localhost",
-    user: "postgres",
-    password: "sammybammy2004",
-    database: "signin/wl",
-  },
-});
+// const db = knex({
+//   client: "pg",
+//   connection: {
+//     host: "localhost",
+//     port: "3000",
+//     user: "zachary",
+//     password: "2048",
+//     database: "signin/wl",
+//   },
+// });
 
 const bodyParser = require("body-parser");
 const { Console } = require("console");
@@ -30,8 +31,8 @@ app.get("/createAccount", (req, res) => {
 });
 
 app.post("/createAccount", (req, res) => {
-  let username = req.body.username;
-  let password = req.body.password;
+  let user = req.body.username;
+  let pass = req.body.password;
   console.log(username);
   console.log(password);
   res.send(`Username: ${username} Password: ${password}`);
@@ -42,21 +43,7 @@ app.get("/homepage", (req, res) => {
   console.log("on the homepage");
 });
 
-
-knex
-  .insert({ description: username, user_id: 4 })
-  .into("username")
-  .returning("id");
-console.log(username);
-
-knex
-  .insert({ description: password, user_id: 4 })
-  .into("password")
-  .returning("id");
-console.log(password);
-
 io.on("connection", (Socket) => {
-
   //console.log(Socket);
 
   Socket.on("message", (data) => {
