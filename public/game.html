@@ -22,7 +22,9 @@
 
       socket.on("message", (data) => {
         let h2 = (document.querySelector("h2").innerHTML = data);
+        console.log("messagefouhsdfihus");
       });
+
       const sendMessage = () => {
         let userInput = document.querySelector(".message").value;
         socket.emit("message", userInput);
