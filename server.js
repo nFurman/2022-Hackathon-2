@@ -42,6 +42,7 @@ app.get("/homepage", (req, res) => {
   console.log("on the homepage");
 });
 
+
 knex
   .insert({ description: username, user_id: 4 })
   .into("username")
@@ -55,7 +56,7 @@ knex
 console.log(password);
 
 io.on("connection", (Socket) => {
-  console.log("User connected:" + Socket.id);
+
   //console.log(Socket);
 
   Socket.on("message", (data) => {
