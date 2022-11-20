@@ -4,6 +4,8 @@ const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, { cors: { origin: "*" } });
 
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(__dirname + "/public"));
 
 app.get("/", (req, res) => {
@@ -12,6 +14,12 @@ app.get("/", (req, res) => {
 
 app.get("/createAccount", (req, res) => {
   res.sendFile(__dirname + "/public/createAccount.html");
+});
+
+app.post("/createAccount", (req, res) => {
+  let username = req.body.username;
+  let password = req.body.password;
+  res.send(`Username: ${username} Password: ${password}`);
 });
 
 app.get("/homepage", (req, res) => {
