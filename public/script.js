@@ -931,3 +931,7 @@ function setupEventListeners() {
     e.preventDefault();
   }
 }
+
+function createAccountLocation() {
+  window.location.href = "http://localhost:3000/createAccount";
+}
