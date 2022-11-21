@@ -7,18 +7,18 @@ const bodyParser = require("body-parser");
 const { Console } = require("console");
 const { sign } = require("crypto");
 
-const db = require("knex")({
-  client: "pg",
-  connection: {
-    host: "localhost",
-    user: "zachary",
-    password: "2048",
-    database: "main_database",
-    port: 5432,
-  },
-});
+// const db = require("knex")({
+//   client: "pg",
+//   connection: {
+//     host: "localhost",
+//     user: "zachary",
+//     password: "2048",
+//     database: "main_database",
+//     port: 5432,
+//   },
+// });
 
-app.set("db", db);
+// app.set("db", db);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(__dirname + "/public"));
@@ -34,13 +34,13 @@ var passwords;
 
 app.get("/login", (req, res) => {
   res.sendFile(__dirname + "/public/login.html");
-  db.select("usernames", "pass")
-    .from("signin")
-    .then((signin) => {
-      usernames = signin[0].usernames;
-      passwords = signin[0].pass;
-      console.log(usernames);
-    });
+  // db.select("usernames", "pass")
+  //   .from("signin")
+  //   .then((signin) => {
+  //     usernames = signin[0].usernames;
+  //     passwords = signin[0].pass;
+  //     console.log(usernames);
+  //   });
 });
 
 app.post("/", (req, res) => {
@@ -89,9 +89,14 @@ io.on("connection", (Socket) => {
     Socket.broadcast.emit("startGame");
   });
 
-  Socket.on("broadcastMove", (move, castling) => {
-    Socket.broadcast.emit("receiveMove", move, castling);
-    console.log(move);
+  Socket.on("broadcastMove", (move, castling, datenow, checkmateStatus) => {
+    Socket.broadcast.emit(
+      "receiveMove",
+      move,
+      castling,
+      datenow,
+      checkmateStatus
+    );
   });
 });
 
