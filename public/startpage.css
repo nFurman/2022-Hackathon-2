@@ -1,0 +1,52 @@
+h1 {
+  font-family: "Arvo", serif;
+  font-size: 80px;
+  color: rgb(0, 0, 0);
+  text-align: center;
+}
+
+.login {
+  width: 100px;
+  height: 60px;
+  border-radius: 16px;
+  margin-bottom: 40px;
+  background-color: black;
+  color: rgb(255, 255, 255);
+  font-size: 30px;
+  cursor: pointer;
+  margin: 0;
+  position: absolute;
+  top: 30%;
+  left: 43%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  border-color: rgb(252, 252, 252);
+  border-width: 3px;
+}
+
+.create-account {
+  width: 250px;
+  height: 60px;
+  border-radius: 16px;
+  margin-bottom: 40px;
+  background-color: black;
+  color: rgb(255, 255, 255);
+  font-size: 30px;
+  cursor: pointer;
+  margin: 0;
+  position: absolute;
+  top: 30%;
+  left: 56%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  border-color: rgb(252, 252, 252);
+  border-width: 3px;
+}
+
+body {
+  background-image: url(https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpng.pngtree.com%2Fback_origin_pic%2F04%2F12%2F48%2F7dff22fd1b0c518a267bea3b0178c425.jpg&f=1&nofb=1&ipt=2699bbeb21e39439ff900902eb3a7dd996f6efcf8231b2cfc642395e49c3e58c&ipo=images);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  background-size: 300vh, 300vw;
+}
