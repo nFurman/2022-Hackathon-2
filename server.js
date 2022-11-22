@@ -12,6 +12,7 @@ const db = knex({
     user: "postgres",
     password: "sammybammy2004",
     database: "signin/wl",
+    port: "5432",
   },
 });
 
@@ -29,9 +30,12 @@ app.get("/createAccount", (req, res) => {
   res.sendFile(__dirname + "/public/createAccount.html");
 });
 
+let user;
+let pass;
+
 app.post("/createAccount", (req, res) => {
-  let username = req.body.username;
-  let password = req.body.password;
+  user = req.body.username;
+  pass = req.body.password;
   console.log(username);
   console.log(password);
   res.send(`Username: ${username} Password: ${password}`);
@@ -39,20 +43,15 @@ app.post("/createAccount", (req, res) => {
 
 app.get("/homepage", (req, res) => {
   res.sendFile(__dirname + "/public/game.html");
-  console.log("on the homepage");
+  console.log(user);
+  console.log(pass);
 });
 
-knex
-  .insert({ description: username, user_id: 4 })
-  .into("username")
-  .returning("id");
-console.log(username);
+// knex.insert({ description: user, user_id: 4 }).into("username").returning("id");
+// console.log(username);
 
-knex
-  .insert({ description: password, user_id: 4 })
-  .into("password")
-  .returning("id");
-console.log(password);
+// knex.insert({ description: pass, user_id: 4 }).into("password").returning("id");
+// console.log(password);
 
 io.on("connection", (Socket) => {
   console.log("User connected:" + Socket.id);

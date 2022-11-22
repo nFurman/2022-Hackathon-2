@@ -13,6 +13,7 @@
 
 body {
   margin: 0;
+  overflow: hidden;
 }
 
 .piece {
@@ -21,31 +22,37 @@ body {
 
 #logo {
   width: 80px;
-  height: 80 px;
+  height: 155px;
 }
 
 #title {
-  font-family: "MedievalSharp", cursive;
+  font-family: "Arvo", serif;
   font-size: 55px;
-  color: rgb(249, 249, 249);
+  color: rgb(0, 0, 0);
+  margin-top: 5px;
 }
 
 .btn {
-  width: 70px;
-  height: 30px;
-  border-radius: 35px;
+  width: 62px;
+  height: 32px;
+  border-radius: 16px;
   margin-bottom: 40px;
   background-color: black;
-  color: white;
+  color: rgb(255, 255, 255);
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 10px;
 }
 
 .create-account {
-  width: 120px;
-  height: 30px;
-  border-radius: 35px;
+  width: 115px;
+  height: 32px;
+  border-radius: 16px;
   margin-bottom: 40px;
   background-color: black;
-  color: white;
+  color: rgb(255, 255, 255);
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .container {
@@ -62,11 +69,30 @@ body {
 }
 
 .cell-3 {
-  background: rgb(60, 60, 60);
+  background: rgb(84, 84, 104);
   grid-area: main;
-  border-radius: 25px;
   font-size: 2.5rem;
   text-align: center;
   padding: 4rem;
   border-style: solid black;
+  background: rgba(199, 226, 248, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(11.7px);
+  -webkit-backdrop-filter: blur(11.7px);
+  border: 1px solid rgba(199, 226, 248, 0.53);
+}
+
+#password,
+#username {
+  width: 150px;
+  background-color: rgba(255, 255, 255, 0);
+  border: none;
+  border-radius: 5px;
+  box-shadow: 2px 5px 5px rgba(0, 0, 0, 0.306);
+}
+
+#password::placeholder,
+#username::placeholder {
+  color: rgb(53, 52, 52);
 }

@@ -5,6 +5,8 @@
   "dependencies": {
     "ejs": "^3.1.8",
     "express": "^4.18.2",
+    "knex": "^2.3.0",
+    "pg": "^8.8.0",
     "socket.io": "^4.5.3"
   },
   "name": "hackathon-2",
