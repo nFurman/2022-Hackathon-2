@@ -701,7 +701,7 @@ function checkForCheck(color, board) {
       if (kingCol > 0) {
         if (
           board[kingRow + 1][kingCol - 1][0] === oppositeColor &&
-          board[kingRow + 1][kingCol - 1][0] === "p"
+          board[kingRow + 1][kingCol - 1][1] === "p"
         ) {
           return true;
         }
@@ -709,7 +709,7 @@ function checkForCheck(color, board) {
       if (kingCol < 7) {
         if (
           board[kingRow + 1][kingCol + 1][0] === oppositeColor &&
-          board[kingRow + 1][kingCol + 1][0] === "p"
+          board[kingRow + 1][kingCol + 1][1] === "p"
         ) {
           return true;
         }
@@ -720,15 +720,18 @@ function checkForCheck(color, board) {
       if (kingCol > 0) {
         if (
           board[kingRow - 1][kingCol - 1][0] === oppositeColor &&
-          board[kingRow - 1][kingCol - 1][0] === "p"
+          board[kingRow - 1][kingCol - 1][1] === "p"
         ) {
           return true;
         }
       }
       if (kingCol < 7) {
+        console.log(
+          "checking for pawn moves at: " + (kingRow - 1) + ", " + (kingCol + 1)
+        );
         if (
           board[kingRow - 1][kingCol + 1][0] === oppositeColor &&
-          board[kingRow - 1][kingCol + 1][0] === "p"
+          board[kingRow - 1][kingCol + 1][1] === "p"
         ) {
           return true;
         }
@@ -803,7 +806,27 @@ function gameOver(winner) {
 }
 
 function receiveMove(move, castling, datenow, checkmateStatus) {
-  makeMove(move, castling, datenow, checkmateStatus);
+  if (checkmateStatus === "#") {
+    gameOver(move.side);
+  }
+
+  addMoveToTracker(move, castling, checkmateStatus);
+
+  let capture = false;
+  if (realBoard[move.endRow][move.endCol] != "empty") {
+    capture = true;
+  }
+  updateBoardArray(realBoard, move, castling);
+  animateMove(move, castling, capture);
+
+  if (playerIsWhite === (turn % 2 == 0)) {
+    yourTime = yourTime - (datenow - turnStartTime);
+  } else {
+    oppTime = oppTime - (datenow - turnStartTime);
+  }
+  turnStartTime = datenow;
+
+  turn++;
 }
 
 function makeMove(move, castling, datenow, checkmateStatus) {
@@ -812,8 +835,13 @@ function makeMove(move, castling, datenow, checkmateStatus) {
   }
   addMoveToTracker(move, castling, checkmateStatus);
 
-  updateHTMLBoard(move, castling);
+  let capture = false;
+  if (realBoard[move.endRow][move.endCol] != "empty") {
+    capture = true;
+  }
+
   updateBoardArray(realBoard, move, castling);
+  updateHTMLBoard(move, castling, capture);
 
   if (playerIsWhite === (turn % 2 == 0)) {
     yourTime = yourTime - (datenow - turnStartTime);
@@ -975,12 +1003,12 @@ function moveHTMLPiece(movingPiece, row, col) {
   movingPiece.dataset.col = col;
 }
 
-function updateHTMLBoard(move, castling = "not attempted") {
+function updateHTMLBoard(move, castling = "not attempted", capture) {
   let kingPiece, rookPiece;
   switch (castling) {
     case "not attempted":
       //capture
-      if (realBoard[move.endRow][move.endCol][0] != "empty") {
+      if (capture) {
         let capturedPiece = getPieceByRowCol(move.endRow, move.endCol);
         console.log("captured a piece: " + capturedPiece);
         capturedPiece.remove();
@@ -988,12 +1016,13 @@ function updateHTMLBoard(move, castling = "not attempted") {
 
       //promotion
       if (move.piece === "p") {
-        if (move.side === "white" && move.endRow === 7) {
+        if (
+          (move.side === "white" && move.endRow === 7) ||
+          (move.side === "black" && move.endRow === 0)
+        ) {
           let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
           movingPiece.src =
             move.side === "white" ? whitePieces["q"] : blackPieces["q"];
-        } else if (move.side === "black" && move.endRow === 0) {
-          let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
         }
       }
 
@@ -1022,8 +1051,82 @@ function getPieceByRowCol(row, col) {
   );
 }
 
-function animateMove(move) {
-  // let movingPiece = getPieceByRowCol(move.endRow, move.endCol);
+function animateMove(move, castling, capture) {
+  let kingPiece, rookPiece;
+  switch (castling) {
+    case "not attempted":
+      //capture
+      if (capture) {
+        let capturedPiece = getPieceByRowCol(move.endRow, move.endCol);
+        console.log("captured a piece: " + capturedPiece);
+        capturedPiece.remove();
+      }
+
+      //promotion
+      if (move.piece === "p") {
+        if (
+          (move.side === "white" && move.endRow === 7) ||
+          (move.side === "black" && move.endRow === 0)
+        ) {
+          let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
+          movingPiece.src =
+            move.side === "white" ? whitePieces["q"] : blackPieces["q"];
+        }
+      }
+
+      //normal movement
+      let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
+      animateHTMLPiece(
+        movingPiece,
+        move.startRow,
+        move.startCol,
+        move.endRow,
+        move.endCol
+      );
+      break;
+    case "kingside":
+      kingPiece = getPieceByRowCol(move.startRow, 4);
+      rookPiece = getPieceByRowCol(move.endRow, 7);
+      animateHTMLPiece(kingPiece, move.startRow, move.startCol, move.endRow, 6);
+      animateHTMLPiece(rookPiece, move.startRow, 7, move.startRow, 5);
+      break;
+    case "queenside":
+      kingPiece = getPieceByRowCol(move.startRow, 4);
+      rookPiece = getPieceByRowCol(move.endRow, 0);
+      animateHTMLPiece(kingPiece, move.startRow, move.startCol, move.endRow, 2);
+      animateHTMLPiece(rookPiece, move.startRow, 0, move.startRow, 3);
+      break;
+  }
+}
+
+function animateHTMLPiece(movingPiece, startRow, startCol, endRow, endCol) {
+  movingPiece.dataset.row = endRow;
+  movingPiece.dataset.col = endCol;
+  let startTime = performance.now();
+  function animationFrameMoveAnimationFunctionSuckMyCockBalls() {
+    let timeProg = (performance.now() - startTime) / 400;
+    if (timeProg < 1) {
+      requestAnimationFrame(animationFrameMoveAnimationFunctionSuckMyCockBalls);
+      let colProg = startCol + timeProg * (endCol - startCol);
+      let rowProg = startRow + timeProg * (endRow - startRow);
+      if (playerIsWhite) {
+        movingPiece.style.left = TILE_SIZE * colProg + "px";
+        movingPiece.style.top = BOARD_SIZE - TILE_SIZE * (rowProg + 1) + "px";
+      } else {
+        movingPiece.style.left = BOARD_SIZE - TILE_SIZE * (colProg + 1) + "px";
+        movingPiece.style.top = TILE_SIZE * rowProg + "px";
+      }
+    } else {
+      if (playerIsWhite) {
+        movingPiece.style.left = TILE_SIZE * endCol + "px";
+        movingPiece.style.top = BOARD_SIZE - TILE_SIZE * (endRow + 1) + "px";
+      } else {
+        movingPiece.style.left = BOARD_SIZE - TILE_SIZE * (endCol + 1) + "px";
+        movingPiece.style.top = TILE_SIZE * endRow + "px";
+      }
+    }
+  }
+  animationFrameMoveAnimationFunctionSuckMyCockBalls();
 }
 
 let pieceCurrentlyDragged = []; //[row, col]
