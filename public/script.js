@@ -12,7 +12,6 @@ let turn = 0;
 
 let numUsersConnected = 1;
 let playerIsWhite = false;
-
 let gamePlaying = false;
 
 function userConnected() {
@@ -1074,8 +1073,4 @@ function setupEventListeners() {
   function dragover(e) {
     e.preventDefault();
   }
-}
-
-function createAccountLocation() {
-  window.location.href = "http://localhost:3000/createAccount";
 }
