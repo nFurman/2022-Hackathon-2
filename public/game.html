@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
   </head>
-  <body>
+  <body class="background">
+    <div id="board_container"></div>
     <div id="clock">
       <div id="oppClock" class="playerClock"></div>
       <div id="yourClock" class="playerClock"></div>
@@ -17,10 +18,13 @@
       <div class="colorLabel">WHITE</div>
       <div class="colorLabel">BLACK</div>
     </div>
-
-    <div id="board_container"></div>
-    <input type="text" class="message" placeholder="message" />
-    <button onclick="sendMessage()">Send Message</button>
+    <input
+      id="sendMessageTextBox"
+      type="text"
+      class="message"
+      placeholder="message"
+    />
+    <button id="sendMessageBtn" onclick="sendMessage()">Send Message</button>
     <h2></h2>
     <script>
       console.log("receieved message");
