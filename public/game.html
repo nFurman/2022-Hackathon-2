@@ -9,6 +9,15 @@
     <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
   </head>
   <body>
+    <div id="clock">
+      <div id="oppClock" class="playerClock"></div>
+      <div id="yourClock" class="playerClock"></div>
+    </div>
+    <div id="moveTracker">
+      <div class="colorLabel">WHITE</div>
+      <div class="colorLabel">BLACK</div>
+    </div>
+
     <div id="board_container"></div>
     <input type="text" class="message" placeholder="message" />
     <button onclick="sendMessage()">Send Message</button>
@@ -35,16 +44,16 @@
         socket.emit("message", userInput);
       };
 
-      socket.on("receiveMove", (move, castling) => {
-        receiveMove(move, castling);
+      socket.on("receiveMove", (move, castling, datenow, checkmateStatus) => {
+        receiveMove(move, castling, datenow, checkmateStatus);
       });
 
       function broadcastStartGame() {
         socket.emit("broadcastStartGame");
       }
 
-      function broadcastMove(move, castling) {
-        socket.emit("broadcastMove", move, castling);
+      function broadcastMove(move, castling, datenow, checkmateStatus) {
+        socket.emit("broadcastMove", move, castling, datenow, checkmateStatus);
       }
     </script>
 

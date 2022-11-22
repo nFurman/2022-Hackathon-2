@@ -15,6 +15,45 @@ body {
   margin: 0;
 }
 
+#clock {
+  position: absolute;
+  left: 600px;
+  width: 200px;
+  height: 600px;
+}
+
+.playerClock {
+  width: 200px;
+  height: 300px;
+  font-size: 100px;
+}
+
+#moveTracker {
+  position: absolute;
+  left: 850px;
+  top: 25px;
+  width: 230px;
+  border: 3px solid black;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-size: 34px;
+}
+
+.moveTrackerMove {
+  border: 1px solid black;
+}
+
+.colorLabel {
+  font-family: "Courier New", Courier, monospace;
+  border: 2px solid black;
+}
+
+#yourClock {
+}
+
+#oppClock {
+}
+
 .piece {
   position: absolute;
 }
