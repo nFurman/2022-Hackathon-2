@@ -6,6 +6,7 @@ const io = require("socket.io")(server, { cors: { origin: "*" } });
 const bodyParser = require("body-parser");
 const { Console } = require("console");
 const { sign } = require("crypto");
+const e = require("express");
 
 // const db = require("knex")({
 //   client: "pg",
@@ -43,36 +44,51 @@ app.get("/login", (req, res) => {
   //   });
 });
 
-app.post("/", (req, res) => {
+app.post("/login", (req, res) => {
   let userSignin = req.body.username;
   let passSignin = req.body.password;
 });
 
 app.get("/createAccount", (req, res) => {
-  console.log("hi im here");
   res.sendFile(__dirname + "/public/createAccount.html");
 });
+
+//Globalizing All Usernames and All passwords
+
+var allUsernames = [];
+var allPasswords = [];
 
 app.post("/createAccount", (req, res) => {
   let userCreated = req.body.username;
   let passCreated = req.body.password;
+  db.select("usernames", "pass")
+    .from("signin")
+    .then((signin) => {
+      for (let index = 0; index < signin.length; index++) {
+        allUsernames.push(signin[index].usernames);
+        allPasswords.push(signin[index].pass);
+      }
+      //checks if username is taken, if it is then dont do anything
+      if (allUsernames.indexOf(userCreated) === -1) {
+        console.log("User Allowed");
+        db("signin")
+          .insert(
+            {
+              usernames: userCreated,
+              pass: passCreated,
+            },
+            ["usernames", "pass"]
+          )
+          .then((signin) => console.log("Username Added to DB"));
+      } else {
+        console.log("Username taken");
+        e.preventDefault();
+      }
+    });
 });
-
-// function myValidation(user, pass) {
-//   if (user ===) {
-//     alert("Oops! Validation failed!");
-//     returnToPreviousPage();
-//     return false;
-//   }
-//   alert("Validations successful!");
-//   return true;
-// }
 
 app.get("/homepage", (req, res) => {
   res.sendFile(__dirname + "/public/game.html");
-  console.log("on the homepage");
-  console.log(usernames);
-  console.log(passwords);
 });
 
 io.on("connection", (Socket) => {
@@ -82,7 +98,6 @@ io.on("connection", (Socket) => {
 
   Socket.on("message", (data) => {
     Socket.broadcast.emit("message", data);
-    console.log(data);
   });
 
   Socket.on("broadcastStartGame", () => {
@@ -98,7 +113,7 @@ io.on("connection", (Socket) => {
       checkmateStatus
     );
   });
-});
+
 
 server.listen(3000, () => {
   console.log("listening on 3000");
