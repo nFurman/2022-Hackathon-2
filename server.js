@@ -28,11 +28,7 @@ app.get("/", (req, res) => {});
 var allUsernames = [];
 var allPasswords = [];
 
-//started using /start as first route because the / route wont grab db data
-//but we need globalized data of the usernames and passwords so we will use
-///start to get them and start the page
-app.get("/start", (req, res) => {
-  res.sendFile(__dirname + "/public/startpage.html");
+function updateGlobalVars() {
   db.select("usernames", "pass")
     .from("signin")
     .then((signin) => {
@@ -40,13 +36,22 @@ app.get("/start", (req, res) => {
         allUsernames.push(signin[index].usernames);
         allPasswords.push(signin[index].pass);
       }
+      console.log(allPasswords);
+      console.log(allUsernames);
     });
+}
+
+//started using /start as first route because the / route wont grab db data
+//but we need globalized data of the usernames and passwords so we will use
+///start to get them and start the page
+app.get("/start", (req, res) => {
+  res.sendFile(__dirname + "/public/startpage.html");
+  updateGlobalVars();
 });
 
 app.get("/login", (req, res) => {
-  res.sendFile(__dirname + "/public/login.php");
-  console.log(allUsernames);
-  console.log(allPasswords);
+  res.sendFile(__dirname + "/public/login.html");
+  updateGlobalVars();
 });
 
 app.post("/login", (req, res) => {
@@ -90,7 +95,7 @@ app.post("/createAccount", (req, res) => {
         ["usernames", "pass"]
       )
       .then((signin) => console.log("Username Added to DB"));
-    res.redirect("http://localhost:3000/homepage");
+    res.redirect("http://localhost:3000/login");
   } else {
     console.log("Username taken");
   }
