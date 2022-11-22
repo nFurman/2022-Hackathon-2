@@ -81,8 +81,8 @@ function makeGrid() {
     for (let col = 0; col < 8; col++) {
       let newSquare = document.createElement("div");
       newSquare.classList.add("tile");
-      newSquare.width = TILE_SIZE;
-      newSquare.height = TILE_SIZE;
+      newSquare.style.width = TILE_SIZE + "px";
+      newSquare.style.height = TILE_SIZE + "px";
 
       if (playerIsWhite) {
         newSquare.dataset.row = 7 - row;

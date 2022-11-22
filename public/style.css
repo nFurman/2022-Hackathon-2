@@ -22,22 +22,23 @@ body {
 }
 
 #clock {
-  position: absolute;
-  left: 700px;
-  width: 200px;
+  position: relative;
+  left: 20px;
+  width: 250px;
   height: 600px;
 }
 
 .playerClock {
   width: 200px;
-  height: 300px;
+  height: 480px;
   font-size: 100px;
+  text-shadow: 1px 1px 10px #fff, 1px 1px 5px #ccc;
 }
 
 #moveTracker {
-  position: absolute;
-  left: 850px;
-  top: 25px;
+  position: relative;
+  top: -350px;
+  left: 20px;
   width: 230px;
   border: 3px solid black;
   display: grid;
@@ -52,6 +53,18 @@ body {
 .colorLabel {
   font-family: "Courier New", Courier, monospace;
   border: 2px solid black;
+}
+
+#sendMessageBtn {
+  position: absolute;
+  top: 80%;
+  left: 30px;
+}
+
+#sendMessageTextBox {
+  position: absolute;
+  top: 80%;
+  left: 145px;
 }
 
 #yourClock {
