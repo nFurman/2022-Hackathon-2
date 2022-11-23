@@ -26,6 +26,7 @@ function userConnected() {
 }
 
 function startGame() {
+  numUsersConnected = 2;
   makeGrid();
   setUpBoard();
   setupEventListeners();
@@ -58,12 +59,24 @@ function updateClock() {
     yourClock.textContent = displayTime(
       yourTime - (Date.now() - turnStartTime)
     );
+    if (yourTime - (Date.now() - turnStartTime) < 0) {
+      alert("LOST ON TIME LLLLLL");
+      gamePlaying = false;
+    }
   } else {
     oppClock.textContent = displayTime(oppTime - (Date.now() - turnStartTime));
+    if (oppTime - (Date.now() - turnStartTime) < 0) {
+      alert("WON ON TIME");
+      gamePlaying = false;
+    }
   }
 }
 
 function displayTime(ms) {
+  if (ms <= 0) {
+    ms = 0;
+  }
+  ms = Math.ceil(ms / 1000) * 1000;
   let minutes = Math.floor(ms / 60000);
   let seconds = Math.floor((ms - minutes * 60000) / 1000);
   if (minutes < 10) {
@@ -156,8 +169,8 @@ function drawStartPieces() {
 function setUpBoard() {
   realBoard = makeEmptyBoard();
   for (let c = 0; c < 8; c++) {
-    realBoard[6][c] = ["black", "p"];
-    realBoard[1][c] = ["white", "p"];
+    realBoard[6][c] = ["black", "p", true];
+    realBoard[1][c] = ["white", "p", true];
   }
 
   realBoard[7][0] = ["black", "r", true];
@@ -186,7 +199,6 @@ function checkLegalMove(move, board = realBoard) {
   console.log("checking legal move");
 
   let castleAttemptResult = checkCastleAttempt(move);
-  console.log(castleAttemptResult);
   if (castleAttemptResult == undefined) {
     console.log("panic!");
     return false;
@@ -232,6 +244,7 @@ function checkLegalMove(move, board = realBoard) {
       return false;
     }
   }
+
   return false;
 }
 
@@ -243,6 +256,18 @@ function canReach(move, board = realBoard) {
     case "p":
       switch (side) {
         case "white":
+          //en p
+
+          if (
+            Math.abs(endCol - startCol) == 1 &&
+            startRow === 4 &&
+            endRow === 5 &&
+            board[4][endCol][0] === "black" &&
+            board[4][endCol][1] === "p" &&
+            board[4][endCol][2] === true
+          ) {
+            return true;
+          }
           if (
             endCol === startCol &&
             startRow === 1 &&
@@ -252,7 +277,6 @@ function canReach(move, board = realBoard) {
           ) {
             return true;
           }
-
           if (
             endCol === startCol &&
             endRow - startRow === 1 &&
@@ -269,6 +293,17 @@ function canReach(move, board = realBoard) {
           }
           break;
         case "black":
+          //en p
+          if (
+            Math.abs(endCol - startCol) == 1 &&
+            startRow === 3 &&
+            endRow === 2 &&
+            board[3][endCol][0] === "white" &&
+            board[3][endCol][1] === "p" &&
+            board[3][endCol][2] === true
+          ) {
+            return true;
+          }
           if (
             endCol === startCol &&
             startRow === 6 &&
@@ -725,9 +760,6 @@ function checkForCheck(color, board) {
         }
       }
       if (kingCol < 7) {
-        console.log(
-          "checking for pawn moves at: " + (kingRow - 1) + ", " + (kingCol + 1)
-        );
         if (
           board[kingRow - 1][kingCol + 1][0] === oppositeColor &&
           board[kingRow - 1][kingCol + 1][1] === "p"
@@ -804,7 +836,26 @@ function gameOver(winner) {
   alert(winner + " wins!");
 }
 
-function receiveMove(move, castling, datenow, checkmateStatus) {
+function preventFutureEnP() {
+  for (let c in realBoard[0]) {
+    if (realBoard[3][c][1] === "p") {
+      realBoard[3][c][2] = false;
+    }
+    if (realBoard[2][c][1] === "p") {
+      realBoard[2][c][2] = false;
+    }
+    if (realBoard[4][c][1] === "p") {
+      realBoard[4][c][2] = false;
+    }
+    if (realBoard[5][c][1] === "p") {
+      realBoard[5][c][2] = false;
+    }
+  }
+}
+
+function receiveMove(moveData) {
+  let { move, castling, datenow, checkmateStatus } = moveData;
+
   if (checkmateStatus === "#") {
     gameOver(move.side);
   }
@@ -841,6 +892,8 @@ function makeMove(move, castling, datenow, checkmateStatus) {
 
   updateBoardArray(realBoard, move, castling);
   updateHTMLBoard(move, castling, capture);
+
+  preventFutureEnP();
 
   if (playerIsWhite === (turn % 2 == 0)) {
     yourTime = yourTime - (datenow - turnStartTime);
@@ -914,7 +967,12 @@ function attemptMove(move) {
 
     makeMove(move, castling, Date.now(), checkmateStatus);
 
-    broadcastMove(move, castling, Date.now(), checkmateStatus);
+    broadcastMove({
+      move: move,
+      castling: castling,
+      datenow: Date.now(),
+      checkmateStatus: checkmateStatus,
+    });
   } else {
     //do stuff
   }
@@ -935,6 +993,28 @@ function updateBoardArray(board, move, castling = "not attempted") {
         } else if (move.side === "black" && move.endRow === 0) {
           board[move.endRow][move.endCol] = ["black", "q"];
           board[move.startRow][move.startCol] = ["empty"];
+          return;
+        }
+        if (
+          move.side === "white" &&
+          move.endRow === 5 &&
+          move.startCol != move.endCol &&
+          realBoard[move.endRow][move.endCol][0] === "empty"
+        ) {
+          board[move.endRow][move.endCol] = ["white", "p"];
+          board[move.startRow][move.startCol] = ["empty"];
+          board[move.startRow][move.endCol] = ["empty"];
+          return;
+        }
+        if (
+          move.side === "black" &&
+          move.endRow === 2 &&
+          move.startCol != move.endCol &&
+          realBoard[move.endRow][move.endCol][0] === "empty"
+        ) {
+          board[move.endRow][move.endCol] = ["black", "p"];
+          board[move.startRow][move.startCol] = ["empty"];
+          board[move.startRow][move.endCol] = ["empty"];
           return;
         }
       }
@@ -1023,6 +1103,27 @@ function updateHTMLBoard(move, castling = "not attempted", capture) {
           movingPiece.src =
             move.side === "white" ? whitePieces["q"] : blackPieces["q"];
         }
+
+        if (
+          move.side === "white" &&
+          move.endRow === 5 &&
+          move.startCol != move.endCol &&
+          realBoard[move.endRow][move.endCol][0] === "empty"
+        ) {
+          let capturedPiece = getPieceByRowCol(move.startRow, move.endCol);
+          console.log("captured a piece: " + capturedPiece);
+          capturedPiece.remove();
+        }
+        if (
+          move.side === "black" &&
+          move.endRow === 2 &&
+          move.startCol != move.endCol &&
+          realBoard[move.endRow][move.endCol][0] === "empty"
+        ) {
+          let capturedPiece = getPieceByRowCol(move.startRow, move.endCol);
+          console.log("captured a piece: " + capturedPiece);
+          capturedPiece.remove();
+        }
       }
 
       //normal movement
@@ -1070,6 +1171,26 @@ function animateMove(move, castling, capture) {
           let movingPiece = getPieceByRowCol(move.startRow, move.startCol);
           movingPiece.src =
             move.side === "white" ? whitePieces["q"] : blackPieces["q"];
+        }
+        if (
+          move.side === "white" &&
+          move.endRow === 5 &&
+          move.startCol != move.endCol &&
+          realBoard[move.endRow][move.endCol][0] === "empty"
+        ) {
+          let capturedPiece = getPieceByRowCol(move.startRow, move.endCol);
+          console.log("captured a piece: " + capturedPiece);
+          capturedPiece.remove();
+        }
+        if (
+          move.side === "black" &&
+          move.endRow === 2 &&
+          move.startCol != move.endCol &&
+          realBoard[move.endRow][move.endCol][0] === "empty"
+        ) {
+          let capturedPiece = getPieceByRowCol(move.startRow, move.endCol);
+          console.log("captured a piece: " + capturedPiece);
+          capturedPiece.remove();
         }
       }
 

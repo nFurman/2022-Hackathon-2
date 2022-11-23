@@ -48,16 +48,16 @@
         socket.emit("message", userInput);
       };
 
-      socket.on("receiveMove", (move, castling, datenow, checkmateStatus) => {
-        receiveMove(move, castling, datenow, checkmateStatus);
+      socket.on("receiveMove", (moveData) => {
+        receiveMove(moveData);
       });
 
       function broadcastStartGame() {
         socket.emit("broadcastStartGame");
       }
 
-      function broadcastMove(move, castling, datenow, checkmateStatus) {
-        socket.emit("broadcastMove", move, castling, datenow, checkmateStatus);
+      function broadcastMove(moveData) {
+        socket.emit("broadcastMove", moveData);
       }
     </script>
 

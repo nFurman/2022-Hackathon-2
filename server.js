@@ -113,14 +113,8 @@ io.on("connection", (Socket) => {
     Socket.broadcast.emit("startGame");
   });
 
-  Socket.on("broadcastMove", (move, castling, datenow, checkmateStatus) => {
-    Socket.broadcast.emit(
-      "receiveMove",
-      move,
-      castling,
-      datenow,
-      checkmateStatus
-    );
+  Socket.on("broadcastMove", (moveData) => {
+    Socket.broadcast.emit("receiveMove", moveData);
   });
 });
 
