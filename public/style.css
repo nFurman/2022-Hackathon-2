@@ -2,6 +2,7 @@
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   position: relative;
+  border: 10px solid black;
 }
 
 .dark {
