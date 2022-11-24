@@ -14,6 +14,9 @@ let numUsersConnected = 1;
 let playerIsWhite = false;
 let gamePlaying = false;
 
+let lightColor = "burlywood";
+let darkColor = "saddlebrown";
+
 function userConnected() {
   numUsersConnected++;
   console.log("i see that a user has been connected :)");
@@ -25,12 +28,48 @@ function userConnected() {
   }
 }
 
+const whiteScreen = document.getElementById("whiteScreen");
+
 function startGame() {
   numUsersConnected = 2;
   makeGrid();
   setUpBoard();
   setupEventListeners();
+  whiteScreen.remove();
   startClock();
+}
+
+const settingsDiv = document.getElementById("settingsDiv");
+settingsDiv.remove();
+const screenCover = document.getElementById("screenCover");
+screenCover.remove();
+
+const backgroundDiv = document.querySelector(".background");
+
+function settingsBtnClicked() {
+  backgroundDiv.appendChild(screenCover);
+  backgroundDiv.appendChild(settingsDiv);
+}
+
+function exitSettings() {
+  const lightColorValue = document.getElementById("lightColor").value;
+
+  if (lightColorValue != "") {
+    lightColor = lightColorValue;
+    document.querySelectorAll(".light").forEach((lightTile) => {
+      lightTile.style.backgroundColor = lightColorValue;
+    });
+  }
+  const darkColorValue = document.getElementById("darkColor").value;
+
+  if (darkColorValue != "") {
+    darkColor = darkColorValue;
+    document.querySelectorAll(".dark").forEach((darkTile) => {
+      darkTile.style.backgroundColor = darkColorValue;
+    });
+  }
+  settingsDiv.remove();
+  screenCover.remove();
 }
 
 const moveTracker = document.getElementById("moveTracker");
@@ -106,8 +145,11 @@ function makeGrid() {
 
       if ((row + col) % 2 == 0) {
         newSquare.classList.add("light");
+        console.log(lightColor);
+        newSquare.style.backgroundColor = lightColor;
       } else {
         newSquare.classList.add("dark");
+        newSquare.style.backgroundColor = darkColor;
       }
       BOARD_ELEMENT.appendChild(newSquare);
     }

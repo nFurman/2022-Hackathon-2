@@ -9,6 +9,17 @@
     <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
   </head>
   <body class="background">
+    <div id="whiteScreen">WAITING</div>
+    <div id="screenCover"></div>
+    <button id="settingsBtn" onclick="settingsBtnClicked()">SETTINGS</button>
+    <div id="settingsDiv">
+      <button id="disableChatBtn" onclick="disableChat()">Disable Chat</button>
+      <input id="lightColor" type="text" />
+      <input id="darkColor" type="text" />
+      <label id="lightLabel" for="lightColor">Light Tile Color</label>
+      <label id="darkLabel" for="darkColor">Dark Tile Color</label>
+      <button id="exitSettings" onclick="exitSettings()">Exit</button>
+    </div>
     <div id="board_container"></div>
     <div id="clock">
       <div id="oppClock" class="playerClock"></div>
