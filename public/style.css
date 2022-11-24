@@ -50,6 +50,8 @@
   width: 600px;
   height: 400px;
   border: 20px double black;
+  box-shadow: 0 20px 30px 0 rgba(0, 0, 0, 0.24),
+    0 30px 100px 0 rgba(0, 0, 0, 0.19);
 }
 
 #disableChatBtn {
@@ -124,7 +126,7 @@ body {
 
 #moveTracker {
   position: relative;
-  top: -350px;
+  top: -150px;
   left: 20px;
   width: 230px;
   border: 3px solid black;
