@@ -18,14 +18,16 @@
       <div class="colorLabel">WHITE</div>
       <div class="colorLabel">BLACK</div>
     </div>
-    <input
-      id="sendMessageTextBox"
-      type="text"
-      class="message"
-      placeholder="message"
-    />
-    <button id="sendMessageBtn" onclick="sendMessage()">Send Message</button>
-    <h2></h2>
+    <div id="messageArea">
+      <input
+        id="sendMessageTextBox"
+        type="text"
+        class="message"
+        placeholder="message"
+      />
+      <button id="sendMessageBtn" onclick="sendMessage()">Send Message</button>
+      <div class="textbox"></div>
+    </div>
     <script>
       console.log("receieved message");
       const socket = io("http://localhost:3000/");

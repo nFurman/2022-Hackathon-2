@@ -3,11 +3,12 @@
     "nodemon": "^2.0.20"
   },
   "dependencies": {
+    "db": "^3.4.0",
     "ejs": "^3.1.8",
     "express": "^4.18.2",
     "knex": "^2.3.0",
     "pg": "^8.8.0",
-    "socket.io": "^4.5.3"
+    "socket.io": "^4.5.4"
   },
   "name": "hackathon-2",
   "version": "1.0.0",

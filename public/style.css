@@ -172,3 +172,8 @@ body {
     background-position: 0% 50%;
   }
 }
+
+.messageArea {
+  align-items: right;
+  justify-content: right;
+}
