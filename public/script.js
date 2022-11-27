@@ -1,4 +1,5 @@
 const BOARD_ELEMENT = document.getElementById("board_container");
+let chatBox = document.getElementById("chatBoxDiv");
 
 const TILE_SIZE = 70;
 
@@ -16,6 +17,23 @@ let gamePlaying = false;
 
 let lightColor = "burlywood";
 let darkColor = "saddlebrown";
+
+let chatEnabled = true;
+let numMessages = 0;
+
+function disableChat() {
+  chatEnabled = false;
+  chatBox.remove();
+}
+
+function showMessage(msg) {
+  if (!chatEnabled) return;
+  let newMsg = document.createElement("h2");
+  newMsg.textContent = msg;
+  newMsg.style.top = 81 + numMessages * 2 + "%";
+  numMessages++;
+  chatBox.appendChild(newMsg);
+}
 
 function userConnected() {
   numUsersConnected++;
