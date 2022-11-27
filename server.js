@@ -44,7 +44,7 @@ app.get("/start", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.sendFile(__dirname + "/public/login.php");
+  res.sendFile(__dirname + "/public/login.html");
   console.log(allUsernames);
   console.log(allPasswords);
 });
